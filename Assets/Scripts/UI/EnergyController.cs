@@ -33,13 +33,13 @@ public class EnergyController : MonoBehaviour
         }
         return false;
     }
+    public void ResetEnergy()
+    {
+        currentEnergy = 0;
+    }
     // Update is called once per frame
     void Update()
     {
-        if(GameController.IsGamePause())
-        {
-            return;
-        }
         currentEnergy += EnergyGeneratePerSec*Time.deltaTime;
         if(currentEnergy >= MaxEnergy)
         {

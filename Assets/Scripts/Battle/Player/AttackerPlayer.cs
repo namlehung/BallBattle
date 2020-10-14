@@ -33,7 +33,10 @@ public class AttackerPlayer : MonoBehaviour
             break;
             case PlayerController.PLAYER_STATE_ACTIVE:
             {
-                
+                if(playerController.IsInitEachState == false)
+                {
+                    playerController.IsInitEachState = true;
+                }
             }
             break;
             case PlayerController.PLAYER_STATE_INACTIVE:
@@ -42,7 +45,6 @@ public class AttackerPlayer : MonoBehaviour
                 {
                     playerController.IsInitEachState = true;
                     playerController.SetInActiveMaterial();
-                    transform.GetComponent<BoxCollider>().enabled = false;
                     StartCoroutine(WaitFromIdletoActive());
                 }
             }
@@ -73,24 +75,42 @@ public class AttackerPlayer : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Player hit the Fence");
         string targetname = other.transform.parent.name;
         if(targetname.Equals("EnemyGoal") || targetname.Equals("PlayerGoal"))
         {
             if(other.gameObject.name.Equals("mid") && playerController.HasCarryBall)
             {
-
+                Debug.Log("Player hit the Goal");
+                if(playerController.HasCarryBall)
+                {
+                    GameController.gameControllerInstance.AttackerScoreGoal();
+                }
             }
             else
             {
+                Debug.Log("Player hit the Fence");
                 HitTheFence();
             }
         }
+        else if(other.gameObject.CompareTag("battle_ball"))
+        {
+            Debug.Log("Player hit the ball");
+            TakeBall();
+        }
     }
 
+    private void TakeBall()
+    {
+        GameController.gameControllerInstance.PlayerTakeBall();
+        GameObject playerball = GameController.gameControllerInstance.FindChildByName(transform,"ball");
+        playerball.SetActive(true);
+        playerController.IsGoToGetBall = false;
+        playerController.HasCarryBall = true;
+        playerController.IsMoving = false;
+    }
     void HitTheFence()
     {
-        playerController.CurrentState = PlayerController.PLAYER_STATE_IDLE;
+        playerController.switchState(PlayerController.PLAYER_STATE_IDLE);
         playerController.StopPlayerMove();
         playerController.animator.SetTrigger("IsDeath");
         StartCoroutine(WaitForAnimEnd());
@@ -105,13 +125,12 @@ public class AttackerPlayer : MonoBehaviour
     {
         yield return new WaitForSeconds(spawnTime);
 
-        playerController.CurrentState = PlayerController.PLAYER_STATE_ACTIVE;
+        playerController.switchState(PlayerController.PLAYER_STATE_ACTIVE);
     }
     IEnumerator WaitFromIdletoActive()
     {
         yield return new WaitForSeconds(reactivateTime);
 
-        transform.GetComponent<BoxCollider>().enabled = true;
-        playerController.CurrentState = PlayerController.PLAYER_STATE_ACTIVE;
+        playerController.switchState(PlayerController.PLAYER_STATE_ACTIVE);
     }
 }

@@ -16,6 +16,7 @@ public class DefenderPlayer : MonoBehaviour
     void Start()
     {
         playerController = transform.GetComponent<PlayerController>();
+        rangeDefender = GameController.gameControllerInstance.GetLandSize().x * 0.35f;
     }
 
     // Update is called once per frame
@@ -34,7 +35,10 @@ public class DefenderPlayer : MonoBehaviour
             break;
             case PlayerController.PLAYER_STATE_ACTIVE:
             {
-                
+                if(playerController.IsInitEachState == false)
+                {
+                    playerController.IsInitEachState = true;
+                }
             }
             break;
             case PlayerController.PLAYER_STATE_INACTIVE:
@@ -43,7 +47,6 @@ public class DefenderPlayer : MonoBehaviour
                 {
                     playerController.IsInitEachState = true;
                     playerController.SetInActiveMaterial();
-                    transform.GetComponent<BoxCollider>().enabled = false;
                     StartCoroutine(WaitFromIdletoActive());
                 }
             }
@@ -55,13 +58,12 @@ public class DefenderPlayer : MonoBehaviour
     {
         yield return new WaitForSeconds(spawnTime);
 
-        playerController.CurrentState = PlayerController.PLAYER_STATE_ACTIVE;
+        playerController.switchState(PlayerController.PLAYER_STATE_ACTIVE);
     }
     IEnumerator WaitFromIdletoActive()
     {
         yield return new WaitForSeconds(reactivateTime);
 
-        transform.GetComponent<BoxCollider>().enabled = true;
-        playerController.CurrentState = PlayerController.PLAYER_STATE_ACTIVE;
+        playerController.switchState(PlayerController.PLAYER_STATE_ACTIVE);
     }
 }

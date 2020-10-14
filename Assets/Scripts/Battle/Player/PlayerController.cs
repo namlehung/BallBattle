@@ -19,56 +19,57 @@ public class PlayerController : MonoBehaviour
     public Animator animator;
 
     private bool hasCarryBall;
+    private bool isGoToGetBall;
     // Start is called before the first frame update
     void Start()
     {
-        animator = GameController.FindChildByName(transform,"playermodel").GetComponent<Animator>();
+        animator = GameController.gameControllerInstance.FindChildByName(transform,"playermodel").GetComponent<Animator>();
     }
 
     public void InitPlayer(Vector3 pos,bool IsEnemy)
     {
+        isGoToGetBall = false;
         hasCarryBall = false;
         isMoving = false;
         transform.position = pos;
         isEnemy = IsEnemy;
-        isInitEachState = false;
-        currentState = PLAYER_STATE_SPAWN;
+        switchState(PLAYER_STATE_SPAWN);
         Debug.Log("Generate/Active is enemy: " + isEnemy + " pos: " + pos );
-        GameController gameController = GameObject.Find("Battle").GetComponent<GameController>();
-        transform.gameObject.layer = gameController.layerMaskPlayerActive;
         if(isEnemy)
         {
-            SetPlayerMaterial(gameController.RedEnemyMaterial);
+            SetPlayerMaterial(GameController.gameControllerInstance.RedEnemyMaterial);
             transform.eulerAngles = new Vector3(0,180,0);
         }
         else
         {
-            SetPlayerMaterial(gameController.BluePlayerMaterial);
+            SetPlayerMaterial(GameController.gameControllerInstance.BluePlayerMaterial);
             transform.eulerAngles = Vector3.zero;
+        }
+        GameObject playerball = GameController.gameControllerInstance.FindChildByName(transform,"ball");
+        if(playerball)
+        {
+            playerball.SetActive(false);
         }
     }
 
     private void SetPlayerMaterial(Material mat)
     {
-        GameObject model = GameController.FindChildByName(transform,"playermodel");
-        GameObject shirt = GameController.FindChildByName(model.transform,"Ch38_Shirt");
+        GameObject model = GameController.gameControllerInstance.FindChildByName(transform,"playermodel");
+        GameObject shirt = GameController.gameControllerInstance.FindChildByName(model.transform,"Ch38_Shirt");
         SkinnedMeshRenderer smr = shirt.GetComponent<SkinnedMeshRenderer>();
-        smr.materials[0] = mat;
-        Debug.Log("why canot change mat");
+        smr.materials[0].color = mat.color;
+        //Debug.Log("why canot change mat");
     }
 
     public void SetInActiveMaterial()
     {
-        GameController gameController = transform.GetComponentInParent<GameController>();
-        SetPlayerMaterial(gameController.GrayPlayerMaterial);
+        SetPlayerMaterial(GameController.gameControllerInstance.GrayPlayerMaterial);
     }
     
     public void StopPlayerMove()
     {
         animator.SetBool("IsRunning",false);
         isMoving = false;
-        GameController gameController = transform.GetComponentInParent<GameController>();
-        transform.gameObject.layer = gameController.layerMaskPlayerInActive;
         Rigidbody rigid = transform.GetComponent<Rigidbody>();
         rigid.velocity = Vector3.zero;
         rigid.angularVelocity = Vector3.zero;
@@ -106,5 +107,24 @@ public class PlayerController : MonoBehaviour
     {
         get { return hasCarryBall; }
         set { hasCarryBall = value; }
+    }
+    public bool IsGoToGetBall
+    {
+        get { return isGoToGetBall; }
+        set { isGoToGetBall = value; }
+    }
+
+    public void switchState (int state)
+    {
+        currentState = state;
+        isInitEachState = false;
+        if(currentState == PLAYER_STATE_ACTIVE)
+        {
+            transform.gameObject.layer = GameController.gameControllerInstance.layerMaskPlayerActive;
+        }
+        else
+        {
+            transform.gameObject.layer = GameController.gameControllerInstance.layerMaskPlayerInActive;
+        }
     }
 }

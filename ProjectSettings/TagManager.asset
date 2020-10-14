@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - ARButton
+  - battle_ball
   layers:
   - Default
   - TransparentFX
@@ -18,7 +19,7 @@ TagManager:
   - player
   - wall
   - playerInActive
-  - 
+  - ball
   - 
   - 
   - 
