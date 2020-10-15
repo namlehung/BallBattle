@@ -16,6 +16,9 @@ public class PlayerController : MonoBehaviour
     private bool isMoving;
     public Vector3 targetPos;
     public Vector3 movePos;
+
+    public Vector3 initPos;
+    public Vector3 initRotateAngle;
     public Animator animator;
 
     private bool hasCarryBall;
@@ -50,6 +53,8 @@ public class PlayerController : MonoBehaviour
         {
             playerball.SetActive(false);
         }
+        initPos = pos;
+        initRotateAngle = transform.eulerAngles;
     }
 
     private void SetPlayerMaterial(Material mat)
@@ -120,6 +125,14 @@ public class PlayerController : MonoBehaviour
         isInitEachState = false;
         if(currentState == PLAYER_STATE_ACTIVE)
         {
+            if(isEnemy)
+            {
+                SetPlayerMaterial(GameController.gameControllerInstance.RedEnemyMaterial);
+            }
+            else
+            {
+                SetPlayerMaterial(GameController.gameControllerInstance.BluePlayerMaterial);
+            }
             transform.gameObject.layer = GameController.gameControllerInstance.layerMaskPlayerActive;
         }
         else

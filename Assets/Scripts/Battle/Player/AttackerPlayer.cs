@@ -104,9 +104,26 @@ public class AttackerPlayer : MonoBehaviour
         GameController.gameControllerInstance.PlayerTakeBall();
         GameObject playerball = GameController.gameControllerInstance.FindChildByName(transform,"ball");
         playerball.SetActive(true);
+        playerball.GetComponent<BallController>().SetRotate(true);
         playerController.IsGoToGetBall = false;
+        Debug.Log("-----------------player take ball ------------");
         playerController.HasCarryBall = true;
         playerController.IsMoving = false;
+    }
+
+    public void PassBall()
+    {
+        GameObject playerball = GameController.gameControllerInstance.FindChildByName(transform,"ball");
+        if(playerController.animator.GetBool("IsRunning"))
+        {
+            playerController.animator.SetBool("IsRunning",false);
+        }
+        playerball.SetActive(false);
+        playerController.switchState(PlayerController.PLAYER_STATE_INACTIVE);
+        playerController.IsGoToGetBall = false;
+        playerController.HasCarryBall = false;
+        playerController.IsMoving = false;
+        GameController.gameControllerInstance.PlayerPassBall(transform.position);
     }
     void HitTheFence()
     {

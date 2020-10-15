@@ -47,10 +47,11 @@ public class GameController : MonoBehaviour
 
     private const int MATCH_WIN = 1;
     private const int MATCH_LOSE = 2;
-    private const int MATCH_DRAW = 1;
+    private const int MATCH_DRAW = 3;
 
     private GameObject goEndMatch;
     private GameObject goEndGame;
+    private int finalresultGame;
 
     void Awake()
     {
@@ -78,6 +79,7 @@ public class GameController : MonoBehaviour
 
         totalTime = 0;
         isNeedGenerateBall = false;
+        finalresultGame = -1;
         StartNewGame();
 
         GameObject yard = FindChildByName(transform,"yard");
@@ -100,6 +102,12 @@ public class GameController : MonoBehaviour
     {
         return sizeLandField;
     }
+
+    public void MoveBallToPlayer(Vector3 pos)
+    {
+        BallController ballController = gameBall.GetComponent<BallController>();
+        ballController.setTargetPos(pos);
+    }
     public bool GetBallPosition(out Vector3 pos)
     {
         if(gameBall.activeSelf)
@@ -113,7 +121,32 @@ public class GameController : MonoBehaviour
 
     public void PlayerTakeBall()
     {
+        BallController ballController = gameBall.GetComponent<BallController>();
+        ballController.SetMoving(false);
         gameBall.SetActive(false);
+    }
+
+    public void PlayerPassBall(Vector3 position)
+    {
+        if(transform.GetComponent<GamePlay>().PlayerPassBall(position) == false)
+        {
+            transform.GetComponent<GamePlay>().EndMatch();
+            if(isCurrentPlayerAttack())
+            {
+                arrResultMatch[currnetMatch] = MATCH_LOSE;
+            }
+            else
+            {
+                arrResultMatch[currnetMatch] = MATCH_WIN;
+            }
+            isEndMatch = true;
+        }
+        else
+        {
+            gameBall.SetActive(true);
+            position.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*gameBall.transform.localScale.y);
+            gameBall.transform.position = position;
+        }
     }
     public Rect GetAttackerZone()
     {
@@ -190,11 +223,22 @@ public class GameController : MonoBehaviour
     }
     public void StartNewGame()
     {
+        if(finalresultGame == MATCH_DRAW)
+        {
+            StartPenaltyGame();
+            return;
+        }
+        finalresultGame = -1;
         currnetMatch = -1;
         arrResultMatch = new int[5];
         StartNextMatch();
         goEndGame.SetActive(false);
         PauseGame(false);
+    }
+
+    private void StartPenaltyGame()
+    {
+
     }
     private void SetPlayerTitle()
     {
@@ -248,14 +292,17 @@ public class GameController : MonoBehaviour
         {
             if(playerscore > enemyscore)
             {
-                return "YOU WIN";
+                finalresultGame = MATCH_WIN;
+                return "YOU WIN"; 
             }
             else if(playerscore < enemyscore)
             {
+                finalresultGame = MATCH_LOSE;
                 return "YOU LOSE";
             }
             else
             {
+                finalresultGame = MATCH_DRAW;
                 return "DRAW";
             }
         }
@@ -274,6 +321,14 @@ public class GameController : MonoBehaviour
                     goEndGame.SetActive(true);
                     string currentScore = GetCurrentScore();
                     FindChildByName(goEndGame.transform,"endScore").GetComponent<TextMeshProUGUI>().text = currentScore;
+                    if(finalresultGame == MATCH_DRAW)
+                    {
+                        FindChildByName(goEndGame.transform,"Button").GetComponentInChildren<TextMeshProUGUI>().text = "PLAY PENALTY";
+                    }
+                    else
+                    {
+                        FindChildByName(goEndGame.transform,"Button").GetComponentInChildren<TextMeshProUGUI>().text = "PLAY AGAIN";
+                    }
                 }
             }
             else
@@ -294,6 +349,13 @@ public class GameController : MonoBehaviour
         timeLimit -= Time.deltaTime;
         timeRemain.text = Mathf.RoundToInt(timeLimit) + "s";
         GenerateBall();
+        if(timeLimit<0)
+        {
+            isEndMatch = true;
+            transform.GetComponent<GamePlay>().EndMatch();
+            gameBall.SetActive(false);
+            arrResultMatch[currnetMatch] = MATCH_DRAW;
+        }
     }
 
     private void GenerateBall()
@@ -306,7 +368,7 @@ public class GameController : MonoBehaviour
             Vector3 posSpawn = Vector3.zero;
             posSpawn.x = Random.Range(zone.x,zone.x + zone.width);
             posSpawn.z = Random.Range(zone.y,zone.y + zone.height);
-            posSpawn.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*gameBall.transform.localScale.y)/2;
+            posSpawn.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*gameBall.transform.localScale.y);
             gameBall.transform.position = posSpawn;
             if(gameBall.transform.parent != transform)
             {

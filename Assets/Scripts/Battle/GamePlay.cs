@@ -46,7 +46,8 @@ public class GamePlay : MonoBehaviour
                 }            
             }
         }
-        int status = GetAttackerStatus();
+        GameObject playerhasball = null;
+        int status = GetAttackerStatus(out playerhasball);
         if(status == ATTACKER_STATUS_NONE)
         {
             Vector3 ballpos;
@@ -62,7 +63,7 @@ public class GamePlay : MonoBehaviour
         }
         else if(status == ATTACKER_STATUS_HAS_BALL)
         {
-
+            DefenderGoToTarget(playerhasball);
         }
 
         AttackerMoveToTarget();
@@ -81,6 +82,38 @@ public class GamePlay : MonoBehaviour
         playerEnergy.ResetEnergy();
         enemyEnergy.ResetEnergy();
     }
+
+    private bool DefenderGoToTarget(GameObject playerhasball)
+    {
+        if(playerhasball == null)
+        {
+            return false;
+        }
+        /*/foreach(GameObject go in arrDefenderPlayer)
+        {
+            PlayerController playerController = go.GetComponent<PlayerController>();
+            if(playerController.CurrentState == PlayerController.PLAYER_STATE_ACTIVE && go.activeSelf)
+            {
+                DefenderPlayer defender = go.GetComponent<DefenderPlayer>();
+                float range = defender.rangeDefender;
+                if(defender.defenderStatus == DefenderPlayer.DEFENDER_NONE && Vector3.Distance(go.transform.position,playerhasball.transform.position) < range)
+                {
+                    defender.SetTarget(playerhasball);
+                }
+            }
+        }*/
+        int index = GetNearestTo(arrDefenderPlayer,playerhasball.transform.position);
+        if(index != -1)
+        {
+            DefenderPlayer defender = arrDefenderPlayer[index].GetComponent<DefenderPlayer>();
+            float range = defender.rangeDefender;
+            if(defender.defenderStatus == DefenderPlayer.DEFENDER_NONE && Vector3.Distance(arrDefenderPlayer[index].transform.position,playerhasball.transform.position) < range)
+            {
+                defender.SetTarget(playerhasball);
+            }
+        }
+        return false;
+    }
     private int GetNearestTo(List<GameObject> list,Vector3 pos,float minRange = -1)
     {
         int i = 0, index = -1;
@@ -92,13 +125,18 @@ public class GamePlay : MonoBehaviour
         }
         for(;i<list.Count;i++)
         {
-            if(list[i].gameObject.layer == GameController.gameControllerInstance.layerMaskPlayerActive)
+            //if(list[i].gameObject.layer == GameController.gameControllerInstance.layerMaskPlayerActive)
+            if(list[i].GetComponent<PlayerController>().CurrentState == PlayerController.PLAYER_STATE_ACTIVE && list[i].activeSelf)
             {
                 float dis = Vector3.Distance(pos,list[i].transform.position);
                 if(dis < mindis)
                 {
                     dis = mindis;
                     index = i;
+                }
+                else
+                {
+                    Debug.Log("dis: " + dis + " min: " + mindis);
                 }
             }
         }
@@ -109,7 +147,7 @@ public class GamePlay : MonoBehaviour
         foreach(GameObject go in arrAttackerPlayer)
         {
             PlayerController playerController = go.GetComponent<PlayerController>();
-            if(playerController.CurrentState == PlayerController.PLAYER_STATE_ACTIVE)
+            if(playerController.CurrentState == PlayerController.PLAYER_STATE_ACTIVE && go.activeSelf)
             {
                 if(playerController.IsMoving == false)
                 {
@@ -120,23 +158,28 @@ public class GamePlay : MonoBehaviour
             }
         }
     }
-    private int GetAttackerStatus()
+    private int GetAttackerStatus(out GameObject playerhasball)
     {
         foreach(GameObject go in arrAttackerPlayer)
         {
             PlayerController playerController = go.GetComponent<PlayerController>();
-            if(playerController.CurrentState == PlayerController.PLAYER_STATE_ACTIVE)
+            if(playerController.CurrentState == PlayerController.PLAYER_STATE_ACTIVE && go.activeSelf)
             {
                 if (playerController.HasCarryBall) 
                 {
-                    return ATTACKER_STATUS_HAS_BALL;
+                    {
+                        playerhasball = go;
+                        return ATTACKER_STATUS_HAS_BALL;
+                    }
                 }
                 if(playerController.IsGoToGetBall)
                 {
+                    playerhasball = null;
                     return ATTACKER_STATUS_MOVE_TO_GET_BALL;
                 }
             }
         }
+        playerhasball = null;
         return ATTACKER_STATUS_NONE;
     }
     private void GenerateAttacker(Vector3 pos)
@@ -221,6 +264,19 @@ public class GamePlay : MonoBehaviour
             }
         }
         pointdown = Vector3.zero;
+        return false;
+    }
+
+    public bool PlayerPassBall(Vector3 position)
+    {
+        int index = GetNearestTo(arrAttackerPlayer,position);
+        if(index != -1)
+        {
+            PlayerController playerController = arrAttackerPlayer[index].GetComponent<PlayerController>();
+            playerController.SetPlayerMoveTo(position,false);
+           GameController.gameControllerInstance.MoveBallToPlayer(arrAttackerPlayer[index].transform.position);
+            return true;
+        }
         return false;
     }
 }
