@@ -114,10 +114,10 @@ public class AttackerPlayer : MonoBehaviour
     public void PassBall()
     {
         GameObject playerball = GameController.gameControllerInstance.FindChildByName(transform,"ball");
-        if(playerController.animator.GetBool("IsRunning"))
-        {
-            playerController.animator.SetBool("IsRunning",false);
-        }
+        // if(playerController.animator.GetBool("IsRunning"))
+        // {
+        //     playerController.animator.SetBool("IsRunning",false);
+        // }
         playerball.SetActive(false);
         playerController.switchState(PlayerController.PLAYER_STATE_INACTIVE);
         playerController.IsGoToGetBall = false;

@@ -18,6 +18,8 @@ public class DefenderPlayer : MonoBehaviour
     public const int DEFENDER_NONE = 0;
     public const int DEFENDER_MOVE_TARGET = 1;
     public const int DEFENDER_MOVE_BACK = 2;
+    public const int DEFENDER_IMPACT = 3;
+    public const int DEFENDER_WAITING_ANIM_IMPACT_END = 4;
     // Start is called before the first frame update
     void Start()
     {
@@ -77,11 +79,14 @@ public class DefenderPlayer : MonoBehaviour
         if(targetPlayer != null && targetPlayer == collision.gameObject)
         {
             Debug.Log("--------catch ball----------- : ");
-            //targetPlayer.GetComponent<PlayerController>().animator.SetTrigger("IsImpact");
+            targetPlayer.GetComponent<PlayerController>().animator.SetBool("IsRunning",false);
+            targetPlayer.GetComponent<PlayerController>().animator.SetTrigger("IsImpact");
             targetPlayer.GetComponent<AttackerPlayer>().PassBall();
             targetPlayer = null;
-            //playerController.animator.SetTrigger("IsImpact");
-            defenderStatus = DEFENDER_MOVE_BACK;
+            playerController.animator.SetBool("IsRunning",false);
+            playerController.animator.SetTrigger("IsImpact");
+            //defenderStatus = DEFENDER_MOVE_BACK;
+            defenderStatus = DEFENDER_IMPACT;
             playerController.switchState(PlayerController.PLAYER_STATE_INACTIVE);
         }
     }
@@ -106,10 +111,14 @@ public class DefenderPlayer : MonoBehaviour
             }
             else if(defenderStatus == DEFENDER_MOVE_BACK)
             {
+                if(playerController.animator.GetBool("IsRunning") == false)
+                {
+                    playerController.animator.SetBool("IsRunning",true);
+                }
                 transform.LookAt(playerController.initPos);
                 playerController.movePos = Vector3.Normalize(playerController.initPos - transform.position);
                 transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*returnSpeed;
-                if(Vector3.Distance(transform.position, playerController.initPos) < 0.1f)
+                if(Vector3.Distance(transform.position, playerController.initPos) < 0.05f)
                 {
                     defenderStatus = DEFENDER_NONE;
                     transform.eulerAngles = playerController.initRotateAngle;
@@ -117,7 +126,17 @@ public class DefenderPlayer : MonoBehaviour
                     playerController.IsMoving = false;
                 }
             }
+            else if(defenderStatus == DEFENDER_IMPACT)
+            {
+                defenderStatus = DEFENDER_WAITING_ANIM_IMPACT_END;
+                StartCoroutine(WaitforAnimImpactEnd());
+            }
         }
+    }
+    IEnumerator WaitforAnimImpactEnd()
+    {
+        yield return new WaitForSeconds(0.75f);
+        defenderStatus = DEFENDER_MOVE_BACK;
     }
     IEnumerator WaitFromSpawntoActive()
     {
