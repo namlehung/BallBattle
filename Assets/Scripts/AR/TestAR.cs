@@ -4,12 +4,14 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using UnityEngine.UI;
+using TMPro;
 
 [RequireComponent(typeof(ARRaycastManager))]
 public class TestAR : MonoBehaviour
 {
 
     public GameObject gameObjectToInstantiate;
+    public TextMeshProUGUI debugText;
     private GameObject spawnedObject;
     private ARRaycastManager _arRaycastManager;
     private Vector2 touchPosition;
@@ -48,7 +50,7 @@ public class TestAR : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //debugText.text = "AR Session State: " + ARSession.state;
+        debugText.text = "AR Session State: " + ARSession.state;
         if(!TryGetTouchPosition(out Vector2 touchPosition))
             return;
         
