@@ -14,17 +14,22 @@ public class DefenderPlayer : MonoBehaviour
     private PlayerController playerController;
 
     private GameObject targetPlayer;
-    public int defenderStatus;
+     [HideInInspector] public int defenderStatus;
     public const int DEFENDER_NONE = 0;
     public const int DEFENDER_MOVE_TARGET = 1;
     public const int DEFENDER_MOVE_BACK = 2;
     public const int DEFENDER_IMPACT = 3;
     public const int DEFENDER_WAITING_ANIM_IMPACT_END = 4;
+
+    private GameObject goRangeDefender;
     // Start is called before the first frame update
     void Start()
     {
         playerController = transform.GetComponent<PlayerController>();
         rangeDefender = GameController.gameControllerInstance.GetLandSize().x * 0.35f;
+        goRangeDefender = GameController.gameControllerInstance.FindChildByName(transform,"RangeDefender");
+        goRangeDefender.transform.localScale = new Vector3(rangeDefender,0.01f,rangeDefender); 
+        goRangeDefender.SetActive(false);
     }
 
     // Update is called once per frame
@@ -48,6 +53,20 @@ public class DefenderPlayer : MonoBehaviour
                 if(playerController.IsInitEachState == false)
                 {
                     playerController.IsInitEachState = true;
+                }
+                if(targetPlayer == null)
+                {
+                    if(goRangeDefender.activeSelf == false)
+                    {
+                        goRangeDefender.SetActive(true);
+                    }
+                }
+                else
+                {
+                    if(goRangeDefender.activeSelf)
+                    {
+                        goRangeDefender.SetActive(false);
+                    }
                 }
             }
             break;

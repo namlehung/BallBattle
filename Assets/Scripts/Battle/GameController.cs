@@ -56,8 +56,8 @@ public class GameController : MonoBehaviour
     private const int NUMBER_MATCH = 5;
     public bool isCheatdraw = true;
     public bool isPauseGameAtStart = false;
-
     public static bool isPlayInARMode = false;
+    [HideInInspector]
     public bool hasARpointerDown = false;
     void Awake()
     {

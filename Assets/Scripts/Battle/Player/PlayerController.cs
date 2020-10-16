@@ -14,12 +14,13 @@ public class PlayerController : MonoBehaviour
     private bool isInitEachState;
 
     private bool isMoving;
+    [HideInInspector]
     public Vector3 targetPos;
-    public Vector3 movePos;
+     [HideInInspector] public Vector3 movePos;
 
-    public Vector3 initPos;
-    public Vector3 initRotateAngle;
-    public Animator animator;
+     [HideInInspector] public Vector3 initPos;
+     [HideInInspector] public Vector3 initRotateAngle;
+     [HideInInspector] public Animator animator;
 
     private bool hasCarryBall;
     private bool isGoToGetBall;

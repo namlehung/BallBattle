@@ -99,29 +99,29 @@ public class GamePlay : MonoBehaviour
         {
             return false;
         }
-        /*/foreach(GameObject go in arrDefenderPlayer)
+        foreach(GameObject go in arrDefenderPlayer)
         {
-            PlayerController playerController = go.GetComponent<PlayerController>();
-            if(playerController.CurrentState == PlayerController.PLAYER_STATE_ACTIVE && go.activeSelf)
+            DefenderPlayer dp = go.GetComponent<DefenderPlayer>();
+            if(dp.IsHasTarget() && dp.gameObject.activeSelf)
             {
-                DefenderPlayer defender = go.GetComponent<DefenderPlayer>();
-                float range = defender.rangeDefender;
-                if(defender.defenderStatus == DefenderPlayer.DEFENDER_NONE && Vector3.Distance(go.transform.position,playerhasball.transform.position) < range)
-                {
-                    defender.SetTarget(playerhasball);
-                }
+               return false;
             }
-        }*/
+        }
         int index = GetNearestTo(arrDefenderPlayer,playerhasball.transform.position);
         if(index != -1)
         {
            // Debug.Log("defender nearest index: " + index);
             DefenderPlayer defender = arrDefenderPlayer[index].GetComponent<DefenderPlayer>();
-            float range = defender.rangeDefender;
-            if(defender.defenderStatus == DefenderPlayer.DEFENDER_NONE && Vector3.Distance(arrDefenderPlayer[index].transform.position,playerhasball.transform.position) < range)
+            float range = defender.rangeDefender/2 + 0.2f;//player size box
+			float distoplayer = Vector3.Distance(arrDefenderPlayer[index].transform.position,playerhasball.transform.position);
+            if(distoplayer + 0.1 < range)
             {
-                defender.SetTarget(playerhasball);
+                if(defender.defenderStatus == DefenderPlayer.DEFENDER_NONE)
+                {
+                    defender.SetTarget(playerhasball);
+                }
             }
+            
         }
         return false;
     }

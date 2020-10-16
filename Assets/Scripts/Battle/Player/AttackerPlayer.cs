@@ -11,10 +11,13 @@ public class AttackerPlayer : MonoBehaviour
     public float reactivateTime = 2.5f;
 
     private PlayerController playerController;
+
+    private GameObject goIndicator;
     // Start is called before the first frame update
     void Start()
     {
         playerController = transform.GetComponent<PlayerController>();
+        goIndicator = GameController.gameControllerInstance.FindChildByName(transform,"PlayerIndicator");
     }
 
     // Update is called once per frame
@@ -36,6 +39,21 @@ public class AttackerPlayer : MonoBehaviour
                 if(playerController.IsInitEachState == false)
                 {
                     playerController.IsInitEachState = true;
+                    goIndicator.SetActive(true);
+                }
+                if(playerController.HasCarryBall == false && playerController.IsGoToGetBall == false)
+                {
+                    if(goIndicator.activeSelf == false)
+                    {
+                        goIndicator.SetActive(true);
+                    }
+                }
+                else
+                {
+                    if(goIndicator.activeSelf)
+                    {
+                        goIndicator.SetActive(false);
+                    }
                 }
             }
             break;
