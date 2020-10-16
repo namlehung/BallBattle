@@ -142,12 +142,14 @@ public class DefenderPlayer : MonoBehaviour
     {
         yield return new WaitForSeconds(spawnTime);
 
+        transform.gameObject.layer = LayerMask.NameToLayer("player");
         playerController.switchState(PlayerController.PLAYER_STATE_ACTIVE);
     }
     IEnumerator WaitFromIdletoActive()
     {
         yield return new WaitForSeconds(reactivateTime);
 
+        transform.gameObject.layer = LayerMask.NameToLayer("player");
         playerController.switchState(PlayerController.PLAYER_STATE_ACTIVE);
     }
 }

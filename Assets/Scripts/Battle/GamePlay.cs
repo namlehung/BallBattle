@@ -57,6 +57,7 @@ public class GamePlay : MonoBehaviour
                 if(index >= 0 && index < arrAttackerPlayer.Count)
                 {
                     PlayerController playerController = arrAttackerPlayer[index].GetComponent<PlayerController>();
+                    playerController.IsGoToGetBall = true;
                     playerController.SetPlayerMoveTo(ballpos,false);
                 }
             }
@@ -105,6 +106,7 @@ public class GamePlay : MonoBehaviour
         int index = GetNearestTo(arrDefenderPlayer,playerhasball.transform.position);
         if(index != -1)
         {
+           // Debug.Log("defender nearest index: " + index);
             DefenderPlayer defender = arrDefenderPlayer[index].GetComponent<DefenderPlayer>();
             float range = defender.rangeDefender;
             if(defender.defenderStatus == DefenderPlayer.DEFENDER_NONE && Vector3.Distance(arrDefenderPlayer[index].transform.position,playerhasball.transform.position) < range)
@@ -131,12 +133,8 @@ public class GamePlay : MonoBehaviour
                 float dis = Vector3.Distance(pos,list[i].transform.position);
                 if(dis < mindis)
                 {
-                    dis = mindis;
+                    mindis = dis;
                     index = i;
-                }
-                else
-                {
-                    Debug.Log("dis: " + dis + " min: " + mindis);
                 }
             }
         }

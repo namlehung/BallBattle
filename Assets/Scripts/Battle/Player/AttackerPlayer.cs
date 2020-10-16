@@ -54,6 +54,16 @@ public class AttackerPlayer : MonoBehaviour
 
     void FixedUpdate()
     {
+        if(playerController.CurrentState == PlayerController.PLAYER_STATE_ACTIVE)
+        {
+            if(playerController.HasCarryBall || playerController.IsGoToGetBall)
+            {
+                if(transform.gameObject.layer !=  LayerMask.NameToLayer("player"))
+                {
+                    transform.gameObject.layer = LayerMask.NameToLayer("player");
+                }
+            }
+        }
         if(playerController.IsMoving)
         {
             //Debug.Log("player moving");

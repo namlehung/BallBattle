@@ -38,8 +38,8 @@ public class GameController : MonoBehaviour
     public GameObject EnemyGoalPos;
     public GameObject PlayerGoalPos;
 
-    public int layerMaskPlayerActive = 9;
-    public int layerMaskPlayerInActive = 11;
+    //public int layerMaskPlayerActive = 9;//replace with LayerMask.tNameToPlayer()
+    //public int layerMaskPlayerInActive = 11;
 
     public static GameController gameControllerInstance = null;
 
@@ -53,6 +53,8 @@ public class GameController : MonoBehaviour
     private GameObject goEndGame;
     private int finalresultGame;
 
+    private const int NUMBER_MATCH = 5;
+    public bool isCheatdraw = true;
     void Awake()
     {
         gameControllerInstance = this;
@@ -223,14 +225,14 @@ public class GameController : MonoBehaviour
     }
     public void StartNewGame()
     {
-        if(finalresultGame == MATCH_DRAW)
+        if((finalresultGame == MATCH_DRAW || isCheatdraw) && currnetMatch>=NUMBER_MATCH-1)
         {
             StartPenaltyGame();
             return;
         }
         finalresultGame = -1;
         currnetMatch = -1;
-        arrResultMatch = new int[5];
+        arrResultMatch = new int[NUMBER_MATCH];
         StartNextMatch();
         goEndGame.SetActive(false);
         PauseGame(false);

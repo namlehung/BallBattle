@@ -133,11 +133,11 @@ public class PlayerController : MonoBehaviour
             {
                 SetPlayerMaterial(GameController.gameControllerInstance.BluePlayerMaterial);
             }
-            transform.gameObject.layer = GameController.gameControllerInstance.layerMaskPlayerActive;
+            //transform.gameObject.layer = LayerMask.NameToLayer("player");//GameController.gameControllerInstance.layerMaskPlayerActive;
         }
         else
         {
-            transform.gameObject.layer = GameController.gameControllerInstance.layerMaskPlayerInActive;
+            transform.gameObject.layer =  LayerMask.NameToLayer("playerInActive");//GameController.gameControllerInstance.layerMaskPlayerInActive;
         }
     }
 }
