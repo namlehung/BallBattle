@@ -19,7 +19,7 @@ public class GameController : MonoBehaviour
     private float totalTime;
     private float timeLimit;
     private TextMeshProUGUI timeRemain;
-    private TextMeshProUGUI txtGamePause;
+    private GameObject goGamePause;
     private TextMeshProUGUI txtEnemyTitle;
     private TextMeshProUGUI txtPlayerTitle;
 
@@ -55,6 +55,10 @@ public class GameController : MonoBehaviour
 
     private const int NUMBER_MATCH = 5;
     public bool isCheatdraw = true;
+    public bool isPauseGameAtStart = false;
+
+    public static bool isPlayInARMode = false;
+    public bool hasARpointerDown = false;
     void Awake()
     {
         gameControllerInstance = this;
@@ -67,16 +71,16 @@ public class GameController : MonoBehaviour
             isFirstLaunch = false;
         }
        
-        timeRemain = GameObject.Find("Canvas/Game_UI/Time/Timeremain").GetComponentInChildren<TextMeshProUGUI>();
-        txtGamePause = GameObject.Find("Canvas/Game_UI/txtGamePause").GetComponent<TextMeshProUGUI>();
-        txtEnemyTitle = GameObject.Find("Canvas/Game_UI/EnemyInfo/Name/txt").GetComponent<TextMeshProUGUI>();
-        txtPlayerTitle = GameObject.Find("Canvas/Game_UI/PlayerInfo/Name/txt").GetComponent<TextMeshProUGUI>();
-        txtGamePause.gameObject.SetActive(false);
+        timeRemain = GameObject.Find("Battle/Canvas/Game_UI/Time/Timeremain").GetComponentInChildren<TextMeshProUGUI>();
+        goGamePause = GameObject.Find("Battle/Canvas/GamePause");
+        txtEnemyTitle = GameObject.Find("Battle/Canvas/Game_UI/EnemyInfo/Name/txt").GetComponent<TextMeshProUGUI>();
+        txtPlayerTitle = GameObject.Find("Battle/Canvas/Game_UI/PlayerInfo/Name/txt").GetComponent<TextMeshProUGUI>();
+        goGamePause.SetActive(false);
 
-        goEndMatch = GameObject.Find("Canvas/GameEndMatch");
+        goEndMatch = GameObject.Find("Battle/Canvas/GameEndMatch");
         goEndMatch.SetActive(false);
 
-        goEndGame = GameObject.Find("Canvas/GameEndGame");
+        goEndGame = GameObject.Find("Battle/Canvas/GameEndGame");
         goEndGame.SetActive(false);
 
         totalTime = 0;
@@ -98,8 +102,18 @@ public class GameController : MonoBehaviour
         gameBall = Instantiate(GameBallPrefab);
         gameBall.transform.parent = transform;
         gameBall.SetActive(false);
+
+        // if(isPauseGameAtStart)
+        // {
+        //     PauseGame(true);
+        // }
     }
 
+    public void SetARPointerDown(Vector3 pos)
+    {
+        hasARpointerDown = true;
+        transform.GetComponent<GamePlay>().SetPointerDown(pos);
+    }
     public Vector2 GetLandSize()
     {
         return sizeLandField;
@@ -271,7 +285,10 @@ public class GameController : MonoBehaviour
     void OnApplicationFocus(bool hasFocus)
     {
     #if !UNITY_EDITOR
-        PauseGame(!hasFocus);
+        if(hasFocus== false)
+        {
+            PauseGame(!hasFocus);
+        }
     #endif
     }
 
@@ -321,6 +338,7 @@ public class GameController : MonoBehaviour
                 {
                     PauseGame(true);
                     goEndGame.SetActive(true);
+                    goGamePause.SetActive(false);
                     string currentScore = GetCurrentScore();
                     FindChildByName(goEndGame.transform,"endScore").GetComponent<TextMeshProUGUI>().text = currentScore;
                     if(finalresultGame == MATCH_DRAW)
@@ -338,6 +356,7 @@ public class GameController : MonoBehaviour
                 if(goEndMatch.activeSelf == false)
                 {
                     PauseGame(true);
+                    goGamePause.SetActive(false);
                     goEndMatch.SetActive(true);
                     string currentScore = GetCurrentScore();
                     FindChildByName(goEndMatch.transform,"currentScore").GetComponent<TextMeshProUGUI>().text = currentScore;
@@ -391,13 +410,13 @@ public class GameController : MonoBehaviour
            isGamePause = pause;
            if(isGamePause)
             {
-                txtGamePause.gameObject.SetActive(true);
+                goGamePause.SetActive(true);
                 Time.timeScale = 0;
                 AudioListener.pause = true;
             }
             else
             {
-                txtGamePause.gameObject.SetActive(false);
+                goGamePause.SetActive(false);
                 Time.timeScale = 1;
                 AudioListener.pause = false;
             }

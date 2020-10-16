@@ -11,10 +11,10 @@ public class GamePermission : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if(HasPermissionToUseAR()==false)
-        {
-            RequestPermission();
-        }
+        // if(HasPermissionToUseAR()==false)
+        // {
+        //     RequestPermission();
+        // }
     }
 
     // Update is called once per frame

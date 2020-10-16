@@ -1,25 +1,27 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-public class ARToggleButton : MonoBehaviour
+using UnityEngine.UI;
+
+public class ToggleButtonController : MonoBehaviour
 {
-    // Start is called before the first frame update
-    static bool isAROn = false;
+    public GameObject targetGo;
+    public string functionOn;
+    public string functionOff;
+    public bool IsToggleOn = false;
     private Animator animatorBtnToggle;
 
     private bool isAnimationEnd;
 
+    // Start is called before the first frame update
     void Start()
     {
         animatorBtnToggle = transform.GetComponentInChildren<Animator>();
         animatorBtnToggle.speed = 10;
+        Button button = transform.GetComponentInChildren<Button>();
+        button.onClick.AddListener(onButtonARToggleClick); 
         //Debug.Log("start AR toggle button: ");
-        if(SceneManager.GetActiveScene().name == "AR")
-        {
-            isAROn = true;
-            animatorBtnToggle.SetBool("IsON",isAROn);
-        }
+        animatorBtnToggle.SetBool("IsON",IsToggleOn);
         isAnimationEnd = true;
     }
 
@@ -34,15 +36,20 @@ public class ARToggleButton : MonoBehaviour
         {
             isAnimationEnd = false;
             animatorBtnToggle.speed = 1.0f;
-            isAROn = !isAROn;
-            animatorBtnToggle.SetBool("IsON",isAROn);
+            IsToggleOn = !IsToggleOn;
+            animatorBtnToggle.SetBool("IsON",IsToggleOn);
             StartCoroutine(EndButtonToggleAnim());
         }
     }
 
-    public void SetARstatus(bool isON)
+    public void SetToggle(bool isON)
     {
-        isAROn = isON;
+        IsToggleOn = isON;
+        if(animatorBtnToggle)
+        {
+            animatorBtnToggle.SetBool("IsON",IsToggleOn);
+        }
+        isAnimationEnd = true;
     }
 
     public IEnumerator EndButtonToggleAnim()
@@ -50,13 +57,13 @@ public class ARToggleButton : MonoBehaviour
         yield return new WaitForSecondsRealtime(animatorBtnToggle.speed);
 
         isAnimationEnd = true;
-        if(isAROn == false)
+        if(IsToggleOn == false)
         {
-            SceneController.GotoMainScene();
+            targetGo.SendMessage(functionOff);
         }
         else
         {
-            SceneController.GotoARScene();
+            targetGo.SendMessage(functionOn);
         }
     }
 }

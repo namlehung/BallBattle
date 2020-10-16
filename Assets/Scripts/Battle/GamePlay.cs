@@ -12,11 +12,14 @@ public class GamePlay : MonoBehaviour
     private const int ATTACKER_STATUS_NONE = 0;
     private const int ATTACKER_STATUS_MOVE_TO_GET_BALL = 1;
     private const int ATTACKER_STATUS_HAS_BALL = 2;
+
+    private Vector3 pointerDown;
     // Start is called before the first frame update
     void Start()
     {
-        playerEnergy = GameObject.Find("Canvas/Game_UI/PlayerInfo/FillBar").GetComponent<EnergyController>();
-        enemyEnergy = GameObject.Find("Canvas/Game_UI/EnemyInfo/FillBar").GetComponent<EnergyController>();
+        pointerDown = Vector3.zero;
+        playerEnergy = GameObject.Find("Battle/Canvas/Game_UI/PlayerInfo/FillBar").GetComponent<EnergyController>();
+        enemyEnergy = GameObject.Find("Battle/Canvas/Game_UI/EnemyInfo/FillBar").GetComponent<EnergyController>();
         arrAttackerPlayer = new List<GameObject>();
         arrDefenderPlayer = new List<GameObject>();
     }
@@ -26,26 +29,28 @@ public class GamePlay : MonoBehaviour
     {
         if(GameController.gameControllerInstance.IsGamePause())
             return;
-        Vector3 pos;
-        if(HasPointerDown(out pos))
+
+        if((GameController.isPlayInARMode == false && HasPointerDown(out pointerDown)) || (GameController.isPlayInARMode && GameController.gameControllerInstance.hasARpointerDown))
         {
+            GameController.gameControllerInstance.hasARpointerDown = false;
             Rect Azone = GameController.gameControllerInstance.GetAttackerZone();
-            if(pos.x > Azone.x && pos.x < Azone.x + Azone.width)
+            if(pointerDown.x > Azone.x && pointerDown.x < Azone.x + Azone.width)
             {
-                if(pos.z > Azone.y && pos.z < Azone.y + Azone.height)
+                if(pointerDown.z > Azone.y && pointerDown.z < Azone.y + Azone.height)
                 {
-                    GenerateAttacker(pos);
+                    GenerateAttacker(pointerDown);
                 }            
             }
             Rect Dzone = GameController.gameControllerInstance.GetDefenderZone();
-            if(pos.x > Dzone.x && pos.x < Dzone.x + Dzone.width)
+            if(pointerDown.x > Dzone.x && pointerDown.x < Dzone.x + Dzone.width)
             {
-                if(pos.z > Dzone.y && pos.z < Dzone.y + Dzone.height)
+                if(pointerDown.z > Dzone.y && pointerDown.z < Dzone.y + Dzone.height)
                 {
-                    GenerateDefender(pos);
+                    GenerateDefender(pointerDown);
                 }            
             }
         }
+        
         GameObject playerhasball = null;
         int status = GetAttackerStatus(out playerhasball);
         if(status == ATTACKER_STATUS_NONE)
@@ -70,6 +75,10 @@ public class GamePlay : MonoBehaviour
         AttackerMoveToTarget();
     }
 
+    public void SetPointerDown(Vector3 pos)
+    {
+        pointerDown = pos;
+    }
     public void EndMatch()
     {
         foreach(GameObject go in arrAttackerPlayer)
