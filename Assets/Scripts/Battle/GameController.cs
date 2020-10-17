@@ -54,14 +54,23 @@ public class GameController : MonoBehaviour
     private int finalresultGame;
 
     private const int NUMBER_MATCH = 5;
+
+    private float scaleGameInARMode = 0.1f;
     public bool isCheatdraw = true;
     public bool isPauseGameAtStart = false;
-    public static bool isPlayInARMode = false;
-    [HideInInspector]
-    public bool hasARpointerDown = false;
+    [HideInInspector] public bool isPlayInARMode = false;
+    [HideInInspector] public bool hasARpointerDown = false;
     void Awake()
     {
-        gameControllerInstance = this;
+        if(gameControllerInstance == null)
+        {
+            gameControllerInstance = this;
+        }
+        else if(gameControllerInstance != this)
+        {
+            Destroy(gameObject);
+        }
+        DontDestroyOnLoad(gameObject);
     }
     // Start is called before the first frame update
     void Start()
@@ -70,17 +79,17 @@ public class GameController : MonoBehaviour
         {
             isFirstLaunch = false;
         }
-       
+        Debug.Log("start Game Controller");
         timeRemain = GameObject.Find("Battle/Canvas/Game_UI/Time/Timeremain").GetComponentInChildren<TextMeshProUGUI>();
-        goGamePause = GameObject.Find("Battle/Canvas/GamePause");
+        goGamePause = GameObject.Find("Battle/Canvas/Game_UI/GamePause");
         txtEnemyTitle = GameObject.Find("Battle/Canvas/Game_UI/EnemyInfo/Name/txt").GetComponent<TextMeshProUGUI>();
         txtPlayerTitle = GameObject.Find("Battle/Canvas/Game_UI/PlayerInfo/Name/txt").GetComponent<TextMeshProUGUI>();
         goGamePause.SetActive(false);
 
-        goEndMatch = GameObject.Find("Battle/Canvas/GameEndMatch");
+        goEndMatch = GameObject.Find("Battle/Canvas/Game_UI/GameEndMatch");
         goEndMatch.SetActive(false);
 
-        goEndGame = GameObject.Find("Battle/Canvas/GameEndGame");
+        goEndGame = GameObject.Find("Battle/Canvas/Game_UI/GameEndGame");
         goEndGame.SetActive(false);
 
         totalTime = 0;
@@ -88,20 +97,11 @@ public class GameController : MonoBehaviour
         finalresultGame = -1;
         StartNewGame();
 
-        GameObject yard = FindChildByName(transform,"yard");
-        GameObject land = FindChildByName(yard.transform,"Plane");
-        sizeLandField = new Vector2(yard.transform.localScale.x * land.transform.localScale.x,yard.transform.localScale.z * land.transform.localScale.z);
-        
-        Vector3 playersizebox = GetPlayerSizeBox();
+        CaculatePlayZone(transform.localScale.x,transform.position);
 
-        playerZone = new Rect(-sizeLandField.x/2 + playersizebox.x,-sizeLandField.y/2+playersizebox.z,sizeLandField.x- playersizebox.x,sizeLandField.y/2 - playersizebox.z);
-        
-        
-        enemyZone = new Rect(-sizeLandField.x/2 + playersizebox.x,0+playersizebox.z,sizeLandField.x - playersizebox.x,sizeLandField.y/2 - playersizebox.z);
-
-        gameBall = Instantiate(GameBallPrefab);
-        gameBall.transform.parent = transform;
-        gameBall.SetActive(false);
+        //gameBall = Instantiate(GameBallPrefab);
+        //gameBall.transform.parent = transform;
+        //gameBall.SetActive(false);
 
         // if(isPauseGameAtStart)
         // {
@@ -109,24 +109,108 @@ public class GameController : MonoBehaviour
         // }
     }
 
+    public void HideGameWaitForAR()
+    {
+        // for(int i =0;i<transform.childCount;i++)
+        // {
+        //     GameObject gochild = transform.GetChild(i).gameObject;
+        //     if(gochild.name.Equals("Canvas"))
+        //     {
+        //         for(int j =0;j<gochild.transform.childCount;j++)
+        //         {
+        //             if(!gochild.transform.GetChild(j).name.Equals("ARToggleButton") && gochild.transform.GetChild(j).gameObject.activeSelf)
+        //             {
+        //                 gochild.transform.GetChild(j).gameObject.SetActive(false);
+        //             }
+        //         }
+        //     }
+        //     else if(gochild.name.Equals("yard"))
+        //     {
+        //         gochild.SetActive(false);
+        //     }
+        // }
+        transform.position = new Vector3(0,-100,0);
+    }
+
+    public void ShowGameWhenReady()
+    {
+        // for(int i =0;i<transform.childCount;i++)
+        // {
+        //     GameObject gochild = transform.GetChild(i).gameObject;
+        //     if(gochild.name.Equals("Canvas"))
+        //     {
+        //         for(int j =0;j<gochild.transform.childCount;j++)
+        //         {
+        //             if(!gochild.transform.GetChild(j).name.Equals("ARToggleButton") && gochild.transform.GetChild(j).gameObject.activeSelf == false)
+        //             {
+        //                 gochild.transform.GetChild(j).gameObject.SetActive(true);
+        //             }
+        //         }
+        //     }
+        //     else if(gochild.name.Equals("yard"))
+        //     {
+        //         gochild.SetActive(true);
+        //     }
+        // }
+    }
+    public void SetUpARForBattle(Vector3 pos, Quaternion quaternion, Vector3 scale)
+    {
+        //transform.rotation = quaternion;
+       
+        transform.localScale = scale*scaleGameInARMode;
+        transform.position = new Vector3(pos.x,pos.y +0.01f,pos.z);
+        Debug.Log("namlh battle pos: " + pos);
+        CaculatePlayZone(transform.localScale.x,transform.position);
+    }
+
+    void CaculatePlayZone(float scale, Vector3 deltaPos)
+    {
+        GameObject yard = FindChildByName(transform,"yard");
+        GameObject land = FindChildByName(yard.transform,"Plane");
+
+        sizeLandField = new Vector2(yard.transform.localScale.x * land.transform.localScale.x,yard.transform.localScale.z * land.transform.localScale.z);
+        sizeLandField*=scale;
+        Vector3 playersizebox = GetPlayerSizeBox()*scale;
+        float recx = -sizeLandField.x/2 + playersizebox.x + deltaPos.x;
+        float recz = -sizeLandField.y/2+playersizebox.z + deltaPos.z;
+        float width = sizeLandField.x- playersizebox.x;
+        float height = sizeLandField.y/2 - playersizebox.z;
+        playerZone = new Rect(recx,recz,width,height);
+        recz = 0 +playersizebox.z + deltaPos.z;
+        enemyZone = new Rect(recx,recz,width,height);
+        Debug.Log("size field: " + sizeLandField);
+        Debug.Log("player Zone: " + playerZone);
+        Debug.Log("Enemy Zoen: " + enemyZone);
+    }
+
+    public void ResetBattleLocation()
+    {
+        transform.rotation = Quaternion.identity;
+        transform.localScale = Vector3.one;
+        transform.position = Vector3.zero;
+
+        CaculatePlayZone(transform.localScale.x,transform.position);
+    }
     public void SetARPointerDown(Vector3 pos)
     {
+        if(isGamePause)
+        {
+            return;
+        }
         hasARpointerDown = true;
+        //pos.x = (pos.x - transform.position.x)/scaleGameInARMode;
+        //pos.y = (pos.y -transform.position.y)/scaleGameInARMode;
+        //pos.z = (pos.z - transform.position.z)/scaleGameInARMode;
+        Debug.Log("namlh point on Game: " + pos);
         transform.GetComponent<GamePlay>().SetPointerDown(pos);
     }
     public Vector2 GetLandSize()
     {
         return sizeLandField;
     }
-
-    public void MoveBallToPlayer(Vector3 pos)
-    {
-        BallController ballController = gameBall.GetComponent<BallController>();
-        ballController.setTargetPos(pos);
-    }
     public bool GetBallPosition(out Vector3 pos)
     {
-        if(gameBall.activeSelf)
+        if(gameBall != null)
         {
             pos = gameBall.transform.position;
             return true;
@@ -139,12 +223,16 @@ public class GameController : MonoBehaviour
     {
         BallController ballController = gameBall.GetComponent<BallController>();
         ballController.SetMoving(false);
-        gameBall.SetActive(false);
+        gameBall.transform.parent = null;
+        Destroy(gameBall);
+        //gameBall.SetActive(false);
+        //gameBall.transform.parent = null;
     }
 
     public void PlayerPassBall(Vector3 position)
     {
-        if(transform.GetComponent<GamePlay>().PlayerPassBall(position) == false)
+        Vector3 playerReceiveBallPos;
+        if(transform.GetComponent<GamePlay>().PlayerPassBall(position,out playerReceiveBallPos) == false)
         {
             transform.GetComponent<GamePlay>().EndMatch();
             if(isCurrentPlayerAttack())
@@ -159,9 +247,14 @@ public class GameController : MonoBehaviour
         }
         else
         {
-            gameBall.SetActive(true);
+            //gameBall.SetActive(true);
+            gameBall = Instantiate(GameBallPrefab);
+            gameBall.transform.parent = transform;
             position.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*gameBall.transform.localScale.y);
             gameBall.transform.position = position;
+            gameBall.transform.localScale = Vector3.one;
+            BallController ballController = gameBall.GetComponent<BallController>();
+            ballController.setTargetPos(playerReceiveBallPos);
         }
     }
     public Rect GetAttackerZone()
@@ -221,7 +314,7 @@ public class GameController : MonoBehaviour
 
     public float GetLandPosY()
     {
-        return 0;
+        return transform.position.y;
     }
     public void StartNextMatch()
     {
@@ -273,15 +366,7 @@ public class GameController : MonoBehaviour
             
         }
     }
-    public void CheckAndGotoAR()
-    {
-    #if PLATFORM_ANDROID
-        if(GamePermission.HasPermissionToUseAR())
-        {
-            SceneController.GotoARScene();
-        }
-    #endif
-    }
+
     void OnApplicationFocus(bool hasFocus)
     {
     #if !UNITY_EDITOR
@@ -374,28 +459,42 @@ public class GameController : MonoBehaviour
         {
             isEndMatch = true;
             transform.GetComponent<GamePlay>().EndMatch();
-            gameBall.SetActive(false);
+            //gameBall.SetActive(false);
+            gameBall.transform.parent = null;
+            Destroy(gameBall);
             arrResultMatch[currnetMatch] = MATCH_DRAW;
         }
     }
 
     private void GenerateBall()
     {
-        if(gameBall.activeSelf == false && isNeedGenerateBall)
+        if(gameBall == null && isNeedGenerateBall)
         {
             isNeedGenerateBall = false;
+            
+            gameBall = Instantiate(GameBallPrefab);
             Rect zone = GetAttackerZone();
            
-            Vector3 posSpawn = Vector3.zero;
-            posSpawn.x = Random.Range(zone.x,zone.x + zone.width);
-            posSpawn.z = Random.Range(zone.y,zone.y + zone.height);
-            posSpawn.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*gameBall.transform.localScale.y);
-            gameBall.transform.position = posSpawn;
             if(gameBall.transform.parent != transform)
             {
                 gameBall.transform.parent = transform;
             }
-            gameBall.SetActive(true);
+            Vector3 posSpawn = Vector3.zero;
+            posSpawn.x = Random.Range(zone.x,zone.x + zone.width);// + transform.position.x;
+            posSpawn.z = Random.Range(zone.y,zone.y + zone.height);//  + transform.position.z;
+            posSpawn.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*transform.localScale.y);
+            Debug.Log("pospawn: " + posSpawn + " battle pos: " + transform.position + " landposy : " + GetLandPosY() + " scaley: " + transform.localScale.y + " radius: " + gameBall.GetComponent<SphereCollider>().radius);
+            //posSpawn.x += transform.position.x;
+            //posSpawn.z += transform.position.z;
+            Debug.Log("zone : " + zone + " posSwan: " + posSpawn);
+
+            gameBall.transform.position = posSpawn;
+            gameBall.transform.localScale = Vector3.one;
+            //gameBall.transform.parent = transform;
+            Debug.Log("Generate ball pos:" + gameBall.transform.position);
+            //Vector3 localscale = gameBall.transform.localScale;
+            //gameBall.transform.localScale = new Vector3(localscale.x*transform.localScale.x,localscale.y*transform.localScale.y,localscale.z*transform.localScale.z);
+            //gameBall.SetActive(true);
             gameBall.tag = "battle_ball";
         }
     }
@@ -417,7 +516,14 @@ public class GameController : MonoBehaviour
             else
             {
                 goGamePause.SetActive(false);
-                Time.timeScale = 1;
+                if(isPlayInARMode)
+                {
+                    Time.timeScale = 1;//*scaleGameInARMode;
+                }
+                else
+                {
+                    Time.timeScale = 1;
+                }
                 AudioListener.pause = false;
             }
        }

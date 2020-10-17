@@ -14,23 +14,24 @@ public class AskPermissiom : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(isNeedGoARMode)
-        {
-            if(GamePermission.HasPermissionToUseAR())
-            {
-                SceneController.GotoARScene();
-            }
-            else
-            {
-                GameController.gameControllerInstance.PauseGame(false);
-                isNeedGoARMode = false;
-            }
-        }
+        // if(isNeedGoARMode)
+        // {
+        //     isNeedGoARMode = false;
+        //     if(GamePermission.HasPermissionToUseAR())
+        //     {
+        //         SceneController.GotoARScene();
+        //     }
+        //     else
+        //     {
+        //         GameController.gameControllerInstance.PauseGame(false);
+        //         transform.GetComponent<ToggleButtonController>().SetToggle(false);
+        //     }
+        // }
     }
 
-    public void onPlayARbuttonClick()
+    public void AskAndGoARScene()
     {
-        GameController.gameControllerInstance.PauseGame(true);
+        //GameController.gameControllerInstance.PauseGame(true);
         if(GamePermission.HasPermissionToUseAR())
         {
             SceneController.GotoARScene();
@@ -38,10 +39,34 @@ public class AskPermissiom : MonoBehaviour
         else
         {
             GamePermission.RequestPermission();
-            StartCoroutine(WaitForPermission());
+            isNeedGoARMode = true;
+            //StartCoroutine(WaitForPermission());
         }
     }
 
+    void OnApplicationFocus(bool hasFocus)
+    {
+    #if !UNITY_EDITOR
+        if(hasFocus && isNeedGoARMode)
+        {
+            isNeedGoARMode = false;
+            CheckResult();
+        }
+    #endif
+    }
+
+    private void CheckResult()
+    {
+        if(GamePermission.HasPermissionToUseAR())
+        {
+            SceneController.GotoARScene();
+        }
+        else
+        {
+            GameController.gameControllerInstance.PauseGame(false);
+            transform.GetComponent<ToggleButtonController>().SetToggle(false);
+        }
+    }
     IEnumerator WaitForPermission()
     {
         yield return new WaitForSeconds(0.5f);

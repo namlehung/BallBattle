@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour
         hasCarryBall = false;
         isMoving = false;
         transform.position = pos;
+       
         isEnemy = IsEnemy;
         switchState(PLAYER_STATE_SPAWN);
         Debug.Log("Generate/Active is enemy: " + isEnemy + " pos: " + pos );
@@ -54,6 +55,8 @@ public class PlayerController : MonoBehaviour
         {
             playerball.SetActive(false);
         }
+        //Vector3 localscale = transform.localScale;
+        //transform.localScale = new Vector3(localscale.x*transform.parent.localScale.x,localscale.y*transform.parent.localScale.y,localscale.z*transform.parent.localScale.z);
         initPos = pos;
         initRotateAngle = transform.eulerAngles;
     }

@@ -90,13 +90,14 @@ public class AttackerPlayer : MonoBehaviour
                 playerController.animator.SetBool("IsRunning",true);
             }
             transform.LookAt(playerController.targetPos);
+            float gameScale = GameController.gameControllerInstance.transform.localScale.x;
             if(playerController.HasCarryBall)
             {
-                transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*carrySpeed;
+                transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*carrySpeed*gameScale;
             }
             else
             {
-                transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*normalSpeed;
+                transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*normalSpeed*gameScale;
             }
         }
     }

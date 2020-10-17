@@ -13,6 +13,7 @@ public class GamePlay : MonoBehaviour
     private const int ATTACKER_STATUS_MOVE_TO_GET_BALL = 1;
     private const int ATTACKER_STATUS_HAS_BALL = 2;
 
+    private const int NUMBER_PLAYER_GENERATE_FIRST_TIME = 10;
     private Vector3 pointerDown;
     // Start is called before the first frame update
     void Start()
@@ -22,6 +23,20 @@ public class GamePlay : MonoBehaviour
         enemyEnergy = GameObject.Find("Battle/Canvas/Game_UI/EnemyInfo/FillBar").GetComponent<EnergyController>();
         arrAttackerPlayer = new List<GameObject>();
         arrDefenderPlayer = new List<GameObject>();
+        for(int i = 0;i<NUMBER_PLAYER_GENERATE_FIRST_TIME;i++)
+        {
+            GameObject go = Instantiate(GameController.gameControllerInstance.AttackerPlayerPrefab);
+            go.transform.parent = transform;
+            go.GetComponent<PlayerController>().InitPlayer(Vector3.zero,false);
+            arrAttackerPlayer.Add(go);
+            go.SetActive(false);
+
+            go = Instantiate(GameController.gameControllerInstance.DefenderPlayerPrefab);
+            go.transform.parent = transform;
+            go.GetComponent<PlayerController>().InitPlayer(Vector3.zero,true);
+            arrDefenderPlayer.Add(go);
+            go.SetActive(false);
+        }
     }
 
     // Update is called once per frame
@@ -30,7 +45,7 @@ public class GamePlay : MonoBehaviour
         if(GameController.gameControllerInstance.IsGamePause())
             return;
 
-        if((GameController.isPlayInARMode == false && HasPointerDown(out pointerDown)) || (GameController.isPlayInARMode && GameController.gameControllerInstance.hasARpointerDown))
+        if((GameController.gameControllerInstance.isPlayInARMode == false && HasPointerDown(out pointerDown)) || (GameController.gameControllerInstance.isPlayInARMode && GameController.gameControllerInstance.hasARpointerDown))
         {
             GameController.gameControllerInstance.hasARpointerDown = false;
             Rect Azone = GameController.gameControllerInstance.GetAttackerZone();
@@ -208,14 +223,17 @@ public class GamePlay : MonoBehaviour
                 go = arrAttackerPlayer[i];
                 if(go.activeSelf == false)
                 {
+                    //go.transform.parent = null;
+                    //go.transform.parent = transform;
                     go.SetActive(true);
                     go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
                     return;
                 }
             }
             go = Instantiate(GameController.gameControllerInstance.AttackerPlayerPrefab);
-            go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
             go.transform.parent = transform;
+            go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
+            
             arrAttackerPlayer.Add(go);
         }
     }
@@ -239,14 +257,16 @@ public class GamePlay : MonoBehaviour
                 go = arrDefenderPlayer[i];
                 if(go.activeSelf == false)
                 {
+                    //go.transform.parent = null;
+                    //go.transform.parent = transform;
                     go.SetActive(true);
                     go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
                     return;
                 }
             }
             go = Instantiate(GameController.gameControllerInstance.DefenderPlayerPrefab);
-            go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
             go.transform.parent = transform;
+            go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
             arrDefenderPlayer.Add(go);
         }
     }
@@ -274,16 +294,18 @@ public class GamePlay : MonoBehaviour
         return false;
     }
 
-    public bool PlayerPassBall(Vector3 position)
+    public bool PlayerPassBall(Vector3 position, out Vector3 playerReceiveBallPos)
     {
         int index = GetNearestTo(arrAttackerPlayer,position);
         if(index != -1)
         {
             PlayerController playerController = arrAttackerPlayer[index].GetComponent<PlayerController>();
             playerController.SetPlayerMoveTo(position,false);
-           GameController.gameControllerInstance.MoveBallToPlayer(arrAttackerPlayer[index].transform.position);
+            playerReceiveBallPos = arrAttackerPlayer[index].transform.position;
+           //GameController.gameControllerInstance.MoveBallToPlayer(position,arrAttackerPlayer[index].transform.position);
             return true;
         }
+        playerReceiveBallPos = Vector3.zero;
         return false;
     }
 }

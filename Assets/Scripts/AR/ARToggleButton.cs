@@ -7,7 +7,7 @@ public class ARToggleButton : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if(GameController.isPlayInARMode)
+        if(GameController.gameControllerInstance.isPlayInARMode)
         {
             transform.GetComponent<ToggleButtonController>().SetToggle(true);
         }
@@ -16,18 +16,27 @@ public class ARToggleButton : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
     }
 
     public void AROn()
     {
-       Debug.Log("-------------AR On------------");
+        Debug.Log("-------------AR On------------");
+        if(GameController.gameControllerInstance.isPlayInARMode == false)
+        {
+            transform.GetComponent<ToggleButtonController>().SetToggle(false);
+        }
     }
 
     public void AROff()
     {
        Debug.Log("-------------AR Off------------");
-       GameController.gameControllerInstance.PauseGame(true);
-       GameController.isPlayInARMode = false;
        SceneController.GotoMainScene();
+    }
+
+    public void PauseGame()
+    {
+        GameController.gameControllerInstance.PauseGame(true);
+        transform.GetComponent<AskPermissiom>().AskAndGoARScene();
     }
 }

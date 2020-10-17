@@ -25,11 +25,16 @@ public class DefenderPlayer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        playerController = transform.GetComponent<PlayerController>();
-        rangeDefender = GameController.gameControllerInstance.GetLandSize().x * 0.35f;
-        goRangeDefender = GameController.gameControllerInstance.FindChildByName(transform,"RangeDefender");
-        goRangeDefender.transform.localScale = new Vector3(rangeDefender,0.01f,rangeDefender); 
+        setDefenderRange();
         goRangeDefender.SetActive(false);
+    }
+
+    void setDefenderRange()
+    {
+        playerController = transform.GetComponent<PlayerController>();
+        rangeDefender = GameController.gameControllerInstance.GetLandSize().x * 0.35f ;
+        goRangeDefender = GameController.gameControllerInstance.FindChildByName(transform,"RangeDefender");
+        goRangeDefender.transform.localScale = new Vector3(rangeDefender/ GameController.gameControllerInstance.transform.localScale.x,0.01f,rangeDefender/ GameController.gameControllerInstance.transform.localScale.x); 
     }
 
     // Update is called once per frame
@@ -43,6 +48,7 @@ public class DefenderPlayer : MonoBehaviour
                 {
                     defenderStatus = DEFENDER_NONE;
                     targetPlayer = null;
+                    goRangeDefender.SetActive(false);
                     playerController.IsInitEachState = true;
                     StartCoroutine(WaitFromSpawntoActive());
                 }
@@ -58,6 +64,7 @@ public class DefenderPlayer : MonoBehaviour
                 {
                     if(goRangeDefender.activeSelf == false)
                     {
+                        setDefenderRange();
                         goRangeDefender.SetActive(true);
                     }
                 }
@@ -118,6 +125,7 @@ public class DefenderPlayer : MonoBehaviour
         if(playerController.IsMoving)
         {
             //Debug.Log("player moving");
+            float gameScale = GameController.gameControllerInstance.transform.localScale.x;
             if(targetPlayer != null && defenderStatus == DEFENDER_MOVE_TARGET)
             {
                 if(playerController.animator.GetBool("IsRunning") == false)
@@ -126,7 +134,7 @@ public class DefenderPlayer : MonoBehaviour
                 }
                 transform.LookAt(targetPlayer.transform.position);
                 playerController.movePos = Vector3.Normalize(targetPlayer.transform.position - transform.position);
-                transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*normalSpeed;
+                transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*normalSpeed * gameScale;
             }
             else if(defenderStatus == DEFENDER_MOVE_BACK)
             {
@@ -136,7 +144,7 @@ public class DefenderPlayer : MonoBehaviour
                 }
                 transform.LookAt(playerController.initPos);
                 playerController.movePos = Vector3.Normalize(playerController.initPos - transform.position);
-                transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*returnSpeed;
+                transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*returnSpeed * gameScale;
                 if(Vector3.Distance(transform.position, playerController.initPos) < 0.05f)
                 {
                     defenderStatus = DEFENDER_NONE;

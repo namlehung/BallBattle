@@ -22,6 +22,8 @@ public class SceneController : MonoBehaviour
         if(GamePermission.HasPermissionToUseAR())
         {
             Debug.Log("go to AR scene");
+            GameController.gameControllerInstance.isPlayInARMode = true;
+            GameController.gameControllerInstance.HideGameWaitForAR();
             SceneManager.LoadScene("AR");
             return true;
         }
@@ -30,6 +32,8 @@ public class SceneController : MonoBehaviour
     public static void GotoMainScene()
     {
         Debug.Log("go to Main scene");
+        GameController.gameControllerInstance.isPlayInARMode = false;
+        GameController.gameControllerInstance.ResetBattleLocation();
         SceneManager.LoadScene("Main");
     }
 }

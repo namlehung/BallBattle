@@ -6,15 +6,15 @@ public class BallController : MonoBehaviour
 {
     
     public float ballSpeed = 1.5f;
-    private bool isMoving;
-    private bool isNeedRotate;
+    private bool isMoving =false;
+    private bool isNeedRotate = false;
     private Vector3 targetPos;
     
     // Start is called before the first frame update
     void Start()
     {
-        isMoving = false;
-        isNeedRotate = false;
+        //isMoving = false;
+        //isNeedRotate = false;
     }   
 
     public void setTargetPos(Vector3 pos)
@@ -44,7 +44,8 @@ public class BallController : MonoBehaviour
         if(isMoving)
         {
             Vector3 movepos = Vector3.Normalize(targetPos - transform.position);
-            transform.position = transform.position + movepos*ballSpeed*Time.fixedDeltaTime;
+            float gameScale = GameController.gameControllerInstance.transform.localScale.x;
+            transform.position = transform.position + movepos*ballSpeed*Time.fixedDeltaTime*gameScale;
         }
     }
 }

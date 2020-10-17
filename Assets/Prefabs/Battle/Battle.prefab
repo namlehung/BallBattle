@@ -761,6 +761,9 @@ RectTransform:
   - {fileID: 4669420618765644131}
   - {fileID: 4669420619142780975}
   - {fileID: 4669420619075734235}
+  - {fileID: 4669420619069324598}
+  - {fileID: 4669420620003815537}
+  - {fileID: 4669420619193127412}
   m_Father: {fileID: 4669420619348035551}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1097,6 +1100,7 @@ MonoBehaviour:
   PlayerGoalPos: {fileID: 4669420620010868142}
   isCheatdraw: 1
   isPauseGameAtStart: 0
+  isPlayInARMode: 0
   hasARpointerDown: 0
 --- !u!114 &4669420618793761040
 MonoBehaviour:
@@ -1510,13 +1514,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4669420619069324599}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4669420619275861550}
   - {fileID: 4669420618102065559}
-  m_Father: {fileID: 4669420619348035551}
+  m_Father: {fileID: 4669420618506220786}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1773,13 +1777,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4669420619193127413}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4669420619171159712}
   - {fileID: 4669420619032855413}
-  m_Father: {fileID: 4669420619348035551}
+  m_Father: {fileID: 4669420618506220786}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2086,9 +2090,6 @@ RectTransform:
   - {fileID: 4669420619958450474}
   - {fileID: 8643343519381044642}
   - {fileID: 4669420618506220786}
-  - {fileID: 4669420619069324598}
-  - {fileID: 4669420620003815537}
-  - {fileID: 4669420619193127412}
   m_Father: {fileID: 4669420618793761041}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2810,13 +2811,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4669420620003815542}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4669420619402704761}
   - {fileID: 4669420620022730141}
-  m_Father: {fileID: 4669420619348035551}
+  m_Father: {fileID: 4669420618506220786}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3681,7 +3682,12 @@ PrefabInstance:
     - target: {fileID: 3980705375762036978, guid: b5ed075f39f31f2469dd2f0211e1d433,
         type: 3}
       propertyPath: functionOn
-      value: onPlayARbuttonClick
+      value: AROn
+      objectReference: {fileID: 0}
+    - target: {fileID: 3980705375762036978, guid: b5ed075f39f31f2469dd2f0211e1d433,
+        type: 3}
+      propertyPath: functionBeforeToggle
+      value: PauseGame
       objectReference: {fileID: 0}
     - target: {fileID: 3980705375762036979, guid: b5ed075f39f31f2469dd2f0211e1d433,
         type: 3}

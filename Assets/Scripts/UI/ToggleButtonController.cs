@@ -8,6 +8,7 @@ public class ToggleButtonController : MonoBehaviour
     public GameObject targetGo;
     public string functionOn;
     public string functionOff;
+    public string functionBeforeToggle = "";
     public bool IsToggleOn = false;
     private Animator animatorBtnToggle;
 
@@ -38,6 +39,10 @@ public class ToggleButtonController : MonoBehaviour
             animatorBtnToggle.speed = 1.0f;
             IsToggleOn = !IsToggleOn;
             animatorBtnToggle.SetBool("IsON",IsToggleOn);
+            if(!functionBeforeToggle.Equals(""))
+            {
+                targetGo.SendMessage(functionBeforeToggle);
+            }
             StartCoroutine(EndButtonToggleAnim());
         }
     }

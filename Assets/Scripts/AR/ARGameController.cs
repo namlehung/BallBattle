@@ -20,13 +20,12 @@ public class ARGameController : MonoBehaviour
     static List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
     private ARPlane detectedPlane;
-    private bool isStartGame;
+
     void Awake()
     {
         planeManager = GetComponent<ARPlaneManager>();
         planeManager.planesChanged += onPlaneDetection;
         _arRaycastManager = GetComponent<ARRaycastManager>();
-        isStartGame = false;
     }
     void onPlaneDetection(ARPlanesChangedEventArgs list)
     {
@@ -75,37 +74,26 @@ public class ARGameController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        #if UNITY_EDITOR
-        if(spawnedObject == null)
-        {
-            spawnedObject = Instantiate(gameObjectToInstantiate,new Vector3(0,-1,0),Quaternion.identity);
-            spawnedObject.name = "Battle";
-            GameController.isPlayInARMode = true;
-            spawnedObject.transform.parent = null;
-            spawnedObject.transform.localScale = Vector3.one*0.05f;
-        } 
-        else
-        {
-            //spawnedObject.transform.position = hitPose.position;
-            //spawnedObject.transform.rotation = hitPose.rotation;
-        }
-        #endif
-
         if(detectedPlane != null)
         {
-            Debug.Log("namlh debug Plane position: " + detectedPlane.transform.position);
-            if(spawnedObject == null)
+            //Debug.Log("namlh debug Plane position: " + detectedPlane.transform.position);
+            if(GameController.gameControllerInstance.IsGamePause() == true)
             {
-                spawnedObject = Instantiate(gameObjectToInstantiate,detectedPlane.transform.position,detectedPlane.transform.rotation);
-                spawnedObject.name = "Battle";
-                GameController.isPlayInARMode = true;
-                spawnedObject.transform.parent = null;
-                spawnedObject.transform.localScale = Vector3.one*0.05f;
-            } 
-            else
+                GameController.gameControllerInstance.SetUpARForBattle(detectedPlane.transform.position,detectedPlane.transform.rotation,detectedPlane.transform.localScale);
+            }
+        }
+        if(GameController.gameControllerInstance.IsGamePause() == false)
+        {
+            if(planeManager.enabled)
             {
-                spawnedObject.transform.position = detectedPlane.transform.position;
-                //spawnedObject.transform.rotation = hitPose.rotation;
+                planeManager.enabled = false;
+            }
+        }
+        else
+        {
+            if(planeManager.enabled == false)
+            {
+                planeManager.enabled = true;
             }
         }
         //debugText.text = "AR Session State: " + ARSession.state;
@@ -119,26 +107,7 @@ public class ARGameController : MonoBehaviour
             //Instantiate(gameObjectToInstantiate,hitPose.position,hitPose.rotation);
             Debug.Log("namlh debug tap on plane: " + hitPose.position);
 
-            if(isStartGame)
-            {
-                GameController.gameControllerInstance.SetARPointerDown(hitPose.position);
-            }
+            GameController.gameControllerInstance.SetARPointerDown(hitPose.position);
         }
-    }
-
-    public void StartARGame()
-    {
-        if(spawnedObject == null)
-            return;
-        isStartGame = true;
-        GameController.gameControllerInstance.PauseGame(false);
-    }
-
-    public void PauseARGame()
-    {
-         if(spawnedObject == null)
-            return;
-        isStartGame = false;
-        GameController.gameControllerInstance.PauseGame(true);
     }
 }

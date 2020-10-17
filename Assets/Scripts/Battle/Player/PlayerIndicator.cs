@@ -30,8 +30,9 @@ public class PlayerIndicator : MonoBehaviour
        
         transformchild = child.transform;
         transformchild.position = Vector3.zero;
-        //transformchild.rotation = Quaternion.identity;
-        transformchild.localScale = Vector3.one*0.2f;
+        transformchild.rotation = transform.parent.rotation;
+        float gameScale = GameController.gameControllerInstance.transform.localScale.x;
+        transformchild.localScale = Vector3.one*0.2f*gameScale;
         transformchild.parent = transform;
         transformchild.localPosition = new Vector3(0,0.3f,0.3f);
 
