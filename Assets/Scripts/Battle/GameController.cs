@@ -27,8 +27,6 @@ public class GameController : MonoBehaviour
     private int[] arrResultMatch;
     private bool[] arrIsPlayerAttack = {true,false,true,false,true};
 
-    private bool isEndMatch;
-
     private Rect playerZone = Rect.zero;
     private Rect enemyZone = Rect.zero;
 
@@ -49,17 +47,31 @@ public class GameController : MonoBehaviour
     private const int MATCH_LOSE = 2;
     private const int MATCH_DRAW = 3;
 
+    private const int STATE_GAME_NONE = -1;
+    private const int STATE_GAME_PLAY = 0;
+    private const int STATE_RESULT_MATCH = 1;
+    private const int STATE_RESULT_5_MATCH = 2;
+    private const int STATE_GAME_PENALTY = 3;
+    private const int STATE_FINAL_RESULT = 4;
+    private const int STATE_WAITING_AR = 5;
+
     private GameObject goEndMatch;
     private GameObject goEndGame;
+    private GameObject goTextWaitingAR;
+
+    private GameObject goYard;
     private int finalresultGame;
 
     private const int NUMBER_MATCH = 5;
 
     private float scaleGameInARMode = 0.1f;
     public bool isCheatdraw = true;
-    public bool isPauseGameAtStart = false;
+
     [HideInInspector] public bool isPlayInARMode = false;
     [HideInInspector] public bool hasARpointerDown = false;
+
+    private int gameState;
+    private int preGameState;
     void Awake()
     {
         if(gameControllerInstance == null)
@@ -92,71 +104,85 @@ public class GameController : MonoBehaviour
         goEndGame = GameObject.Find("Battle/Canvas/Game_UI/GameEndGame");
         goEndGame.SetActive(false);
 
+        goTextWaitingAR = GameObject.Find("Battle/Canvas/Game_UI/txtWaiting");;
+        goTextWaitingAR.SetActive(false);
+
+        goYard = GameObject.Find("Battle/yard");
+
         totalTime = 0;
         isNeedGenerateBall = false;
         finalresultGame = -1;
         StartNewGame();
 
+        gameState = STATE_GAME_PLAY;
+        preGameState = STATE_GAME_NONE;
         CaculatePlayZone(transform.localScale.x,transform.position);
 
-        //gameBall = Instantiate(GameBallPrefab);
-        //gameBall.transform.parent = transform;
-        //gameBall.SetActive(false);
-
-        // if(isPauseGameAtStart)
-        // {
-        //     PauseGame(true);
-        // }
     }
 
-    public void HideGameWaitForAR()
+    private void switchGameState (int nextState)
     {
-        // for(int i =0;i<transform.childCount;i++)
-        // {
-        //     GameObject gochild = transform.GetChild(i).gameObject;
-        //     if(gochild.name.Equals("Canvas"))
-        //     {
-        //         for(int j =0;j<gochild.transform.childCount;j++)
-        //         {
-        //             if(!gochild.transform.GetChild(j).name.Equals("ARToggleButton") && gochild.transform.GetChild(j).gameObject.activeSelf)
-        //             {
-        //                 gochild.transform.GetChild(j).gameObject.SetActive(false);
-        //             }
-        //         }
-        //     }
-        //     else if(gochild.name.Equals("yard"))
-        //     {
-        //         gochild.SetActive(false);
-        //     }
-        // }
+        
+        if(gameState != nextState)
+        {
+            preGameState = gameState;
+            gameState = nextState;
+        }
+    }
+    public void PrepareForARGame()
+    {
+        isPlayInARMode = true;
+        PauseGame(true);
+        switchGameState(STATE_WAITING_AR);
+        goYard.SetActive(false);
+        GameObject goUI = GameObject.Find("Battle/Canvas/Game_UI");
+        for(int i = 0;i<goUI.transform.childCount;i++)
+        {
+            goUI.transform.GetChild(i).gameObject.SetActive(false);
+        }
         transform.position = new Vector3(0,-100,0);
     }
 
-    public void ShowGameWhenReady()
+    public void BackToNoneARGame()
     {
-        // for(int i =0;i<transform.childCount;i++)
-        // {
-        //     GameObject gochild = transform.GetChild(i).gameObject;
-        //     if(gochild.name.Equals("Canvas"))
-        //     {
-        //         for(int j =0;j<gochild.transform.childCount;j++)
-        //         {
-        //             if(!gochild.transform.GetChild(j).name.Equals("ARToggleButton") && gochild.transform.GetChild(j).gameObject.activeSelf == false)
-        //             {
-        //                 gochild.transform.GetChild(j).gameObject.SetActive(true);
-        //             }
-        //         }
-        //     }
-        //     else if(gochild.name.Equals("yard"))
-        //     {
-        //         gochild.SetActive(true);
-        //     }
-        // }
+        isPlayInARMode = false;
+        if(gameState == STATE_WAITING_AR)
+        {
+            goYard.SetActive(true);
+            GameObject goUI = GameObject.Find("Battle/Canvas/Game_UI");
+            for(int i = 0;i<goUI.transform.childCount;i++)
+            {
+                goUI.transform.GetChild(i).gameObject.SetActive(true);
+            }
+            //if(preGameState == STATE_GAME_PLAY)
+            {
+                goEndGame.SetActive(false);
+                goEndMatch.SetActive(false);
+            }
+            goTextWaitingAR.SetActive(false);
+            switchGameState(preGameState);
+        }
+        ResetBattleLocation();
     }
     public void SetUpARForBattle(Vector3 pos, Quaternion quaternion, Vector3 scale)
     {
         //transform.rotation = quaternion;
-       
+        if(gameState == STATE_WAITING_AR)
+        {
+            goYard.SetActive(true);
+            GameObject goUI = GameObject.Find("Battle/Canvas/Game_UI");
+            for(int i = 0;i<goUI.transform.childCount;i++)
+            {
+                goUI.transform.GetChild(i).gameObject.SetActive(true);
+            }
+            //if(preGameState == STATE_GAME_PLAY)
+            {
+                goEndGame.SetActive(false);
+                goEndMatch.SetActive(false);
+            }
+            goTextWaitingAR.SetActive(false);
+            switchGameState(preGameState);
+        }
         transform.localScale = scale*scaleGameInARMode;
         transform.position = new Vector3(pos.x,pos.y +0.01f,pos.z);
         Debug.Log("namlh battle pos: " + pos);
@@ -234,7 +260,6 @@ public class GameController : MonoBehaviour
         Vector3 playerReceiveBallPos;
         if(transform.GetComponent<GamePlay>().PlayerPassBall(position,out playerReceiveBallPos) == false)
         {
-            transform.GetComponent<GamePlay>().EndMatch();
             if(isCurrentPlayerAttack())
             {
                 arrResultMatch[currnetMatch] = MATCH_LOSE;
@@ -243,7 +268,7 @@ public class GameController : MonoBehaviour
             {
                 arrResultMatch[currnetMatch] = MATCH_WIN;
             }
-            isEndMatch = true;
+            switchGameState(STATE_RESULT_MATCH);
         }
         else
         {
@@ -318,11 +343,11 @@ public class GameController : MonoBehaviour
     }
     public void StartNextMatch()
     {
-        isEndMatch = false;
         timeLimit = GameTimePerMatch;
         currnetMatch++;
         SetPlayerTitle();
         isNeedGenerateBall = true;
+        switchGameState(STATE_GAME_PLAY);
         goEndMatch.SetActive(false);
         PauseGame(false);
     }
@@ -332,7 +357,7 @@ public class GameController : MonoBehaviour
     }
     public void StartNewGame()
     {
-        if((finalresultGame == MATCH_DRAW || isCheatdraw) && currnetMatch>=NUMBER_MATCH-1)
+        if(finalresultGame == MATCH_DRAW )
         {
             StartPenaltyGame();
             return;
@@ -394,6 +419,10 @@ public class GameController : MonoBehaviour
         }
         if(currnetMatch >= arrResultMatch.Length -1)
         {
+            if(isCheatdraw)
+            {
+                playerscore = enemyscore;
+            }
             if(playerscore > enemyscore)
             {
                 finalresultGame = MATCH_WIN;
@@ -415,9 +444,31 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(isEndMatch)
+        
+        switch(gameState)
         {
-            if(currnetMatch >= arrResultMatch.Length-1)
+            case STATE_RESULT_MATCH:
+            {
+                if(currnetMatch >= arrResultMatch.Length-1)
+                {
+                    transform.GetComponent<GamePlay>().EndMatch();
+                    switchGameState(STATE_RESULT_5_MATCH);
+                }
+                else
+                {
+                    if(goEndMatch.activeSelf == false)
+                    {
+                        transform.GetComponent<GamePlay>().EndMatch();
+                        PauseGame(true);
+                        goGamePause.SetActive(false);
+                        goEndMatch.SetActive(true);
+                        string currentScore = GetCurrentScore();
+                        FindChildByName(goEndMatch.transform,"currentScore").GetComponent<TextMeshProUGUI>().text = currentScore;
+                    }
+                }
+            }
+            break;
+            case STATE_RESULT_5_MATCH:
             {
                 if(goEndGame.activeSelf == false)
                 {
@@ -436,17 +487,21 @@ public class GameController : MonoBehaviour
                     }
                 }
             }
-            else
+            break;
+            case STATE_WAITING_AR:
             {
-                if(goEndMatch.activeSelf == false)
+                if(goTextWaitingAR.activeSelf == false)
                 {
-                    PauseGame(true);
-                    goGamePause.SetActive(false);
-                    goEndMatch.SetActive(true);
-                    string currentScore = GetCurrentScore();
-                    FindChildByName(goEndMatch.transform,"currentScore").GetComponent<TextMeshProUGUI>().text = currentScore;
+                    goTextWaitingAR.SetActive(true);
                 }
             }
+            break;
+            default:
+            if(goTextWaitingAR.activeSelf)
+            {
+                goTextWaitingAR.SetActive(false);
+            }
+            break;
         }
         if(isGamePause)
             return;
@@ -457,12 +512,11 @@ public class GameController : MonoBehaviour
         GenerateBall();
         if(timeLimit<0)
         {
-            isEndMatch = true;
-            transform.GetComponent<GamePlay>().EndMatch();
+            arrResultMatch[currnetMatch] = MATCH_DRAW;
+            switchGameState(STATE_RESULT_MATCH);
             //gameBall.SetActive(false);
             gameBall.transform.parent = null;
             Destroy(gameBall);
-            arrResultMatch[currnetMatch] = MATCH_DRAW;
         }
     }
 
@@ -516,14 +570,7 @@ public class GameController : MonoBehaviour
             else
             {
                 goGamePause.SetActive(false);
-                if(isPlayInARMode)
-                {
-                    Time.timeScale = 1;//*scaleGameInARMode;
-                }
-                else
-                {
-                    Time.timeScale = 1;
-                }
+                Time.timeScale = 1;
                 AudioListener.pause = false;
             }
        }
@@ -531,7 +578,6 @@ public class GameController : MonoBehaviour
 
     public void AttackerScoreGoal()
     {
-        transform.GetComponent<GamePlay>().EndMatch();
         if(isCurrentPlayerAttack())
         {
             arrResultMatch[currnetMatch] = MATCH_WIN;
@@ -540,7 +586,7 @@ public class GameController : MonoBehaviour
         {
             arrResultMatch[currnetMatch] = MATCH_LOSE;
         }
-        isEndMatch = true;
+        switchGameState(STATE_RESULT_MATCH);
     }
    public GameObject FindChildByName(Transform parent,string name)
    {

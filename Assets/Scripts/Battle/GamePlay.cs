@@ -127,7 +127,7 @@ public class GamePlay : MonoBehaviour
         {
            // Debug.Log("defender nearest index: " + index);
             DefenderPlayer defender = arrDefenderPlayer[index].GetComponent<DefenderPlayer>();
-            float range = defender.rangeDefender/2 + 0.2f;//player size box
+            float range = defender.rangeDefender/2 + (0.2f * GameController.gameControllerInstance.transform.localScale.x);//player size box
 			float distoplayer = Vector3.Distance(arrDefenderPlayer[index].transform.position,playerhasball.transform.position);
             if(distoplayer + 0.1 < range)
             {
