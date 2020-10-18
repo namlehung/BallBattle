@@ -2,317 +2,552 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-//source https://github.com/c00pala/Unity-2D-Maze-Generator
+//source youtube: https://www.youtube.com/watch?v=wLuAFDdzbek&ab_channel=Lekabros
+//souce git: https://www.youtube.com/redirect?v=wLuAFDdzbek&event=video_description&q=https%3A%2F%2Fgithub.com%2FBigThinker%2FHexagonia%2Fblob%2Fmaster%2FServer%2FCameraMovement.cs&redir_token=QUFFLUhqbWQ3WGZRQjhld0pHWk9qcE1MMUh1bXNCc1VfUXxBQ3Jtc0ttZHZZSE9WWWgxNUc2UHhiSExKM1pvX04wN215TUxiN3oydUNiNkp1aV9pQjFlVExvdVBOZUNCenliVHREelBnemlkNUVBZHRVNzZDRlE4ZEY2bHkxemZiOUQ0ZGV4Q3hmTl9NQmctNWcwaVFkWTNTNA%3D%3D
 public class MazeGenerator : MonoBehaviour
 {
-    #region Variables:
-    // ------------------------------------------------------
-    // User defined variables - set in editor:
-    // ------------------------------------------------------
-    [Header("Maze generation values:")]
-    [Tooltip("How many cells tall is the maze. MUST be an even number. " +
-        "If number is odd, it will be reduced by 1.\n\n" +
-        "Minimum value of 4.")]
-    public int mazeRows;
-    [Tooltip("How many cells wide is the maze. Must be an even number. " +
-        "If number is odd, it will be reduced by 1.\n\n" +
-        "Minimum value of 4.")]
-    public int mazeColumns;
+    [HideInInspector] public int Rows = 10;
+    [HideInInspector] public int Columns = 5;
+    public GameObject Wall;
+    private MazeCell[,] grid;
+    private int currentRow;
+    private int currentColumn;
+    private bool scanComplete;
 
-    [Header("Maze object variables:")]
-    [Tooltip("Cell prefab object.")]
-    [SerializeField]
-    private GameObject cellPrefab;
-
-    // ------------------------------------------------------
-    // System defined variables - You don't need to touch these:
-    // ------------------------------------------------------
-
-    // Variable to store size of centre room. Hard coded to be 2.
-    private int centreSize = 2;
-
-    // Dictionary to hold and locate all cells in maze.
-    private Dictionary<Vector2, Cell> allCells = new Dictionary<Vector2, Cell>();
-    // List to hold unvisited cells.
-    private List<Cell> unvisited = new List<Cell>();
-    // List to store 'stack' cells, cells being checked during generation.
-    private List<Cell> stack = new List<Cell>();
-
-    // Array will hold 4 centre room cells, from 0 -> 3 these are:
-    // Top left (0), top right (1), bottom left (2), bottom right (3).
-    private Cell[] centreCells = new Cell[4];
-
-    // Cell variables to hold current and checking Cells.
-    private Cell currentCell;
-    private Cell checkCell;
-
-    // Array of all possible neighbour positions.
-    private Vector2[] neighbourPositions = new Vector2[] { new Vector2(-1, 0), new Vector2(1, 0), new Vector2(0, 1), new Vector2(0, -1) };
-
-    // Size of the cells, used to determine how far apart to place cells during generation.
-    private float cellSize;
-
-    private GameObject mazeParent;
-    #endregion
-
-    /* This Start run is an example, you can delete this when 
-     * you want to start calling the maze generator manually. 
-     * To generate a maze is really easy, just call the GenerateMaze() function
-     * pass a rows value and columns value as parameters and the generator will
-     * do the rest for you. Enjoy!
-     */
-    private void Start()
+    private GameObject goTheMaze;
+	void Start ()
     {
-        GenerateMaze(mazeRows, mazeColumns);
-    }
+        goTheMaze = new GameObject();
+        goTheMaze.transform.parent = transform;
+        goTheMaze.name = "TheMaze";
+        //GenerateGrid();
+	}
 
-    private void GenerateMaze(int rows, int columns)
+    public Vector3 GetPlayerPenaltyPos()
     {
-        if (mazeParent != null) DeleteMaze();
-
-        mazeRows = rows;
-        mazeColumns = columns;
-        CreateLayout();
-    }
-
-    // Creates the grid of cells.
-    public void CreateLayout()
-    {
-        InitValues();
-
-        // Set starting point, set spawn point to start.
-        Vector2 startPos = new Vector2(-(cellSize * (mazeColumns / 2)) + (cellSize / 2), -(cellSize * (mazeRows / 2)) + (cellSize / 2));
-        Vector2 spawnPos = startPos;
-
-        for (int x = 1; x <= mazeColumns; x++)
+        Vector2 yardsize = GameController.gameControllerInstance.GetLandSize();
+        float size = yardsize.x / Columns;
+        float startX = -(Columns/2)*size;
+        float startZ = (Rows/2)*size ;
+        if(Columns%2 == 0)
         {
-            for (int y = 1; y <= mazeRows; y++)
+            startX += size/2;
+        }
+        if(Rows%2 == 0)
+        {
+            startZ -= size/2;
+        }
+        int i = Columns/2;
+        int j = Rows-1;
+        return new Vector3(startX + i*size,0,startZ - j*size);
+    }
+    public Vector3 GeneratePosBall()
+    {
+        Vector2 yardsize = GameController.gameControllerInstance.GetLandSize();
+        float size = yardsize.x / Columns;
+        float startX = -(Columns/2)*size;
+        float startZ = (Rows/2)*size ;
+        if(Columns%2 == 0)
+        {
+            startX += size/2;
+        }
+        if(Rows%2 == 0)
+        {
+            startZ -= size/2;
+        }
+        int i = Random.Range(0,100)%Columns;
+        int j = Random.Range(0,100)%Rows;
+        return new Vector3(startX + i*size,0,startZ - j*size);
+    }
+    public void GenerateGrid()
+    {
+        // destroy all the children of this goTheMaze object.
+        foreach (Transform transform in goTheMaze.transform)
+        {
+            Destroy(transform.gameObject);
+        }
+
+        // first, we create the grid with all the walls and floors.
+        CreateGrid();
+
+        // then, we fix the camera position so it's centered.
+        //ChangeCameraPosition();
+
+        // reset the algorithm variables.
+        currentRow = 0;
+        currentColumn = 0;
+        scanComplete = false;
+
+        // then we run the algorithm to carve the paths.
+        HuntAndKill();
+
+        RemoveWalls();
+    }
+
+    void RemoveWalls()//the wall has same postion with the wall of the yard
+    {
+       foreach(Transform childtf in goTheMaze.transform)
+       {
+           string name = childtf.gameObject.name;
+            if(name.IndexOf("r0")>0)
             {
-                GenerateCell(spawnPos, new Vector2(x, y));
-
-                // Increase spawnPos y.
-                spawnPos.y += cellSize;
+                RemoveWall(childtf.gameObject,0);
             }
-
-            // Reset spawnPos y and increase spawnPos x.
-            spawnPos.y = startPos.y;
-            spawnPos.x += cellSize;
-        }
-
-        CreateCentre();
-        RunAlgorithm();
-        MakeExit();
-    }
-
-    // This is where the fun stuff happens.
-    public void RunAlgorithm()
-    {
-        // Get start cell, make it visited (i.e. remove from unvisited list).
-        unvisited.Remove(currentCell);
-
-        // While we have unvisited cells.
-        while (unvisited.Count > 0)
-        {
-            List<Cell> unvisitedNeighbours = GetUnvisitedNeighbours(currentCell);
-            if (unvisitedNeighbours.Count > 0)
+            if(name.IndexOf("c0")>0)
             {
-                // Get a random unvisited neighbour.
-                checkCell = unvisitedNeighbours[Random.Range(0, unvisitedNeighbours.Count)];
-                // Add current cell to stack.
-                stack.Add(currentCell);
-                // Compare and remove walls.
-                CompareWalls(currentCell, checkCell);
-                // Make currentCell the neighbour cell.
-                currentCell = checkCell;
-                // Mark new current cell as visited.
-                unvisited.Remove(currentCell);
+                RemoveWall(childtf.gameObject,2);
             }
-            else if (stack.Count > 0)
+            if(name.IndexOf("c" +(Columns-1))>0)
             {
-                // Make current cell the most recently added Cell from the stack.
-                currentCell = stack[stack.Count - 1];
-                // Remove it from stack.
-                stack.Remove(currentCell);
+                RemoveWall(childtf.gameObject,3);
             }
-        }
-    }
-
-    public void MakeExit()
-    {
-        // Create and populate list of all possible edge cells.
-        List<Cell> edgeCells = new List<Cell>();
-
-        foreach (KeyValuePair<Vector2, Cell> cell in allCells)
-        {
-            if (cell.Key.x == 0 || cell.Key.x == mazeColumns || cell.Key.y == 0 || cell.Key.y == mazeRows)
+            if(name.IndexOf("r"+(Rows-1))>0)
             {
-                edgeCells.Add(cell.Value);
+                RemoveWall(childtf.gameObject,1);
+            }
+       }
+    }
+
+    void RemoveWall(GameObject cell,int direction)// 0: up, 1: down, 2: left , 3: right
+    {
+        string nameremove = "UpWall";
+        if(direction == 1)
+        {
+            nameremove = "DownWall";
+        }
+        else if(direction == 2)
+        {
+            nameremove = "LeftWall";
+        }
+        else if(direction == 3)
+        {
+            nameremove = "RightWall";
+        }
+        GameObject goremove = GameController.gameControllerInstance.FindChildByName(cell.transform,nameremove);
+        if(goremove!= null)
+        {
+            Destroy(goremove);
+        }
+    }
+
+    void CreateGrid()
+    {
+        Vector2 yardsize = GameController.gameControllerInstance.GetLandSize();
+        if(Columns*2 != Rows)
+        {
+            Rows = Columns*2;
+        }
+        float size = yardsize.x / Columns;//Wall.transform.localScale.x;
+        float startX = -(Columns/2)*size;
+        float startZ = (Rows/2)*size ;
+        if(Columns%2 == 0)
+        {
+            startX += size/2;
+        }
+        if(Rows%2 == 0)
+        {
+            startZ -= size/2;
+        }
+        float cellPosX = 0, cellPosY = 0,cellPosZ = startZ;
+
+        grid = new MazeCell[Rows, Columns];
+
+        for (int i = 0; i < Rows; i++)
+        {
+            cellPosX = startX;
+            for (int j = 0; j < Columns; j++)
+            {
+                GameObject goCell = new GameObject();
+                goCell.name = "Cell_r"+i+"_c"+j;
+                goCell.transform.position = new Vector3(cellPosX,cellPosY,cellPosZ);
+                goCell.transform.parent = goTheMaze.transform;
+                
+
+                GameObject upWall = Instantiate(Wall);
+                upWall.name = "UpWall";
+                upWall.transform.parent = goCell.transform;
+                
+                Vector3 localsale = upWall.transform.localScale;
+                localsale.x *= size;
+                localsale.y *= size;
+                upWall.transform.localScale = localsale;
+                upWall.transform.localPosition = new Vector3(0,0,size/2);
+                upWall.transform.rotation = Quaternion.identity;
+               
+                GameObject downWall = Instantiate(Wall);
+                downWall.name = "DownWall";
+                downWall.transform.parent = goCell.transform;
+                downWall.transform.localScale = localsale;
+                downWall.transform.localPosition = new Vector3(0,0,-size/2);
+                downWall.transform.rotation = Quaternion.identity;
+
+                GameObject leftWall = Instantiate(Wall);
+                leftWall.name = "LeftWall";
+                leftWall.transform.parent = goCell.transform;
+                leftWall.transform.localScale = localsale;
+                leftWall.transform.localPosition = new Vector3(-size/2,0,0);
+                leftWall.transform.rotation = Quaternion.Euler(0, 90, 0);
+
+                GameObject rightWall = Instantiate(Wall);
+                rightWall.name = "RightWall";
+                rightWall.transform.parent = goCell.transform;
+                rightWall.transform.localScale = localsale;
+                rightWall.transform.localPosition = new Vector3(size/2,0,0);
+                rightWall.transform.rotation = Quaternion.Euler(0, 90, 0);
+
+                // create the maze cell and add references to its walls.
+                grid[i, j] = new MazeCell();
+                grid[i, j].UpWall = upWall;
+                grid[i, j].DownWall = downWall;
+                grid[i, j].LeftWall = leftWall;
+                grid[i, j].RightWall = rightWall;
+
+                // create an exit door.
+                if (i == 0 && j == Columns/2)// 0)
+                {
+                   Destroy(upWall);
+                    //Destroy(leftWall);
+                }
+
+                // create an entrance door.
+                if (i == Rows - 1 && j == Columns/2)// - 1)
+                {
+                    Destroy(downWall);
+                    //Destroy(rightWall);
+                }
+                cellPosX += size;
+            }
+            cellPosZ -= size;
+        }
+    }
+
+	void HuntAndKill()
+    {
+        // mark the first cell of the random walk as visited.
+        grid[currentRow, currentColumn].Visited = true;
+
+        while (!scanComplete)
+        {
+            Walk();
+            Hunt();
+        }
+    }
+
+    void Walk()
+    {
+        while (AreThereUnvisitedNeighbors())
+        {
+            // then go to a random direction.
+            int direction = Random.Range(0, 4);
+
+            // check up.
+            if (direction == 0)
+            {
+                // make sure the above cell is unvisited and within grid boundaries.
+                if (IsCellUnvisitedAndWithinBoundaries(currentRow - 1, currentColumn))
+                {
+                    // Debug.Log("Went up.");
+
+                    // destroy the up wall of this cell if there's any.
+                    if (grid[currentRow, currentColumn].UpWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].UpWall);
+                        //grid[currentRow, currentColumn].UpWall.SetActive(false);
+                    }
+
+                    currentRow--;
+                    grid[currentRow, currentColumn].Visited = true;
+
+                    // destroy the down wall of the cell above if there's any.
+                    if (grid[currentRow, currentColumn].DownWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].DownWall);
+                        //grid[currentRow, currentColumn].DownWall.SetActive(false);
+                    }
+                }
+            }
+            // check down.
+            else if (direction == 1)
+            {
+                // make sure the below cell is unvisited and within grid boundaries.
+                if (IsCellUnvisitedAndWithinBoundaries(currentRow + 1, currentColumn))
+                {
+                    // Debug.Log("Went down.");
+
+                    // destroy the down wall of this cell if there's any.
+                    if (grid[currentRow, currentColumn].DownWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].DownWall);
+                        //grid[currentRow, currentColumn].DownWall.SetActive(false);
+                    }
+
+                    currentRow++;
+                    grid[currentRow, currentColumn].Visited = true;
+
+                    // destroy the up wall of the cell below if there's any.
+                    if (grid[currentRow, currentColumn].UpWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].UpWall);
+                        //grid[currentRow, currentColumn].UpWall.SetActive(false);
+                    }
+                }
+            }
+            // check left.
+            else if (direction == 2)
+            {
+                // make sure the left cell is unvisited and within grid boundaries.
+                if (IsCellUnvisitedAndWithinBoundaries(currentRow, currentColumn - 1))
+                {
+                    // Debug.Log("Went left.");
+
+                    // destroy the left wall of this cell if there's any.
+                    if (grid[currentRow, currentColumn].LeftWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].LeftWall);
+                        //grid[currentRow, currentColumn].LeftWall.SetActive(false);
+                    }
+
+                    currentColumn--;
+                    grid[currentRow, currentColumn].Visited = true;
+
+                    // destroy the right wall of the cell at the left if there's any.
+                    if (grid[currentRow, currentColumn].RightWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].RightWall);
+                        //grid[currentRow, currentColumn].RightWall.SetActive(false);
+                    }
+                }
+            }
+            // check right.
+            else if (direction == 3)
+            {
+                // make sure the right cell is unvisited and within grid boundaries.
+                if (IsCellUnvisitedAndWithinBoundaries(currentRow, currentColumn + 1))
+                {
+                    // Debug.Log("Went right.");
+
+                    // destroy the right wall of this cell if there's any.
+                    if (grid[currentRow, currentColumn].RightWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].RightWall);
+                        //grid[currentRow, currentColumn].RightWall.SetActive(false);
+                    }
+
+                    currentColumn++;
+                    grid[currentRow, currentColumn].Visited = true;
+
+                    // destroy the left wall of the cell at the right if there's any.
+                    if (grid[currentRow, currentColumn].LeftWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].LeftWall);
+                        //grid[currentRow, currentColumn].LeftWall.SetActive(false);
+                    }
+                }
             }
         }
+    }
 
-        // Get edge cell randomly from list.
-        Cell newCell = edgeCells[Random.Range(0, edgeCells.Count)];
+    // after random walk is complete, we run Hunt.
+    void Hunt()
+    {
+        // assume the scan is complete.
+        scanComplete = true;
 
-        // Remove appropriate wall for chosen edge cell.
-        if (newCell.gridPos.x == 0) RemoveWall(newCell.cScript, 1);
-        else if (newCell.gridPos.x == mazeColumns) RemoveWall(newCell.cScript, 2);
-        else if (newCell.gridPos.y == mazeRows) RemoveWall(newCell.cScript, 3);
-        else RemoveWall(newCell.cScript, 4);
-
-        Debug.Log("Maze generation finished.");
-        for(int i = 0;i<mazeParent.transform.childCount;i++)
+        for (int i = 0; i < Rows; i++)
         {
-            Transform child = mazeParent.transform.GetChild(i).transform;
-            Vector3 pos = new Vector3(child.position.x,0,child.position.y);
-            child.position = pos;
+            for (int j = 0; j < Columns; j++)
+            {
+                // if the condition is satisfied that a cell is unvisited and it has a visited neighbour, do another random walk from new cell.
+                if (!grid[i, j].Visited && AreThereVisitedNeighbors(i, j))
+                {
+                    // scan is not actually complete.
+                    scanComplete = false;
+                    // set the new current row and column.
+                    currentRow = i;
+                    currentColumn = j;
+                    // mark it as visited.
+                    grid[currentRow, currentColumn].Visited = true;
+                    // and create a passage (by destroying wall/s) between the new current cell and any adjacent cell.
+                    DestroyAdjacentWall();
+
+                    return;
+                }
+            }
         }
     }
 
-    public List<Cell> GetUnvisitedNeighbours(Cell curCell)
+    void DestroyAdjacentWall()
     {
-        // Create a list to return.
-        List<Cell> neighbours = new List<Cell>();
-        // Create a Cell object.
-        Cell nCell = curCell;
-        // Store current cell grid pos.
-        Vector2 cPos = curCell.gridPos;
+        bool destroyed = false;
 
-        foreach (Vector2 p in neighbourPositions)
+        while (!destroyed)
         {
-            // Find position of neighbour on grid, relative to current.
-            Vector2 nPos = cPos + p;
-            // If cell exists.
-            if (allCells.ContainsKey(nPos)) nCell = allCells[nPos];
-            // If cell is unvisited.
-            if (unvisited.Contains(nCell)) neighbours.Add(nCell);
+            // pick a random adjacent cell that is visited and within boundaries,
+            // and destroy the wall/s between the current cell and adjacent cell.
+            int direction = Random.Range(0, 4);
+
+            // check up.
+            if (direction == 0)
+            {
+                if (currentRow > 0 && grid[currentRow - 1, currentColumn].Visited)
+                {
+                    // Debug.Log("Destroyed down wall of " + (currentRow - 1) + " " + currentColumn
+                    //             + " and up wall of " + currentRow + " " + currentColumn);
+
+                    if (grid[currentRow, currentColumn].UpWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].UpWall);
+                    }
+
+                    if (grid[currentRow - 1, currentColumn].DownWall)
+                    {
+                        Destroy(grid[currentRow - 1, currentColumn].DownWall);
+                    }
+                    
+                    destroyed = true;
+                }
+            }
+            // check down.
+            else if (direction == 1)
+            {
+                if (currentRow < Rows - 1 && grid[currentRow + 1, currentColumn].Visited)
+                {
+                    // Debug.Log("Destroyed up wall of " + (currentRow + 1) + " " + currentColumn
+                    //             + " and down wall of " + currentRow + " " + currentColumn);
+
+                    if (grid[currentRow, currentColumn].DownWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].DownWall);
+                    }
+
+                    if (grid[currentRow + 1, currentColumn].UpWall)
+                    {
+                        Destroy(grid[currentRow + 1, currentColumn].UpWall);
+                    }
+
+                    destroyed = true;
+                }
+            }
+            // check left.
+            else if (direction == 2)
+            {
+                if (currentColumn > 0 && grid[currentRow, currentColumn - 1].Visited)
+                {
+                    // Debug.Log("Destroyed right wall of " + currentRow + " " + (currentColumn - 1)
+                    //         + " and left wall of " + currentRow + " " + currentColumn);
+
+                    if (grid[currentRow, currentColumn].LeftWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].LeftWall);
+                    }
+
+                    if (grid[currentRow, currentColumn - 1].RightWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn - 1].RightWall);
+                    }
+
+                    destroyed = true;
+                }
+            }
+            // check right.
+            else if (direction == 3)
+            {
+                if (currentColumn < Columns - 1 && grid[currentRow, currentColumn + 1].Visited)
+                {
+                    // Debug.Log("Destroyed left wall of " + currentRow + " " + (currentColumn + 1)
+                    //         + " and right wall of " + currentRow + " " + currentColumn);
+
+                    if (grid[currentRow, currentColumn].RightWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn].RightWall);
+                    }
+
+                    if (grid[currentRow, currentColumn + 1].LeftWall)
+                    {
+                        Destroy(grid[currentRow, currentColumn + 1].LeftWall);
+                    }
+
+                    destroyed = true;
+                }
+            }
+        }
+    }
+
+    bool AreThereUnvisitedNeighbors()
+    {
+        // check up.
+        if (IsCellUnvisitedAndWithinBoundaries(currentRow - 1, currentColumn))
+        {
+            return true;
         }
 
-        return neighbours;
-    }
-
-    // Compare neighbour with current and remove appropriate walls.
-    public void CompareWalls(Cell cCell, Cell nCell)
-    {
-        // If neighbour is left of current.
-        if (nCell.gridPos.x < cCell.gridPos.x)
+        // check down.
+        if (IsCellUnvisitedAndWithinBoundaries(currentRow + 1, currentColumn))
         {
-            RemoveWall(nCell.cScript, 2);
-            RemoveWall(cCell.cScript, 1);
+            return true;
         }
-        // Else if neighbour is right of current.
-        else if (nCell.gridPos.x > cCell.gridPos.x)
+
+        // check left.
+        if (IsCellUnvisitedAndWithinBoundaries(currentRow, currentColumn + 1))
         {
-            RemoveWall(nCell.cScript, 1);
-            RemoveWall(cCell.cScript, 2);
+            return true;
         }
-        // Else if neighbour is above current.
-        else if (nCell.gridPos.y > cCell.gridPos.y)
+
+        // check right.
+        if (IsCellUnvisitedAndWithinBoundaries(currentRow, currentColumn - 1))
         {
-            RemoveWall(nCell.cScript, 4);
-            RemoveWall(cCell.cScript, 3);
+            return true;
         }
-        // Else if neighbour is below current.
-        else if (nCell.gridPos.y < cCell.gridPos.y)
+
+        return false;
+    }
+
+    public bool AreThereVisitedNeighbors(int row, int column)
+    {
+        // check up.
+        if (row > 0 && grid[row - 1, column].Visited)
         {
-            RemoveWall(nCell.cScript, 3);
-            RemoveWall(cCell.cScript, 4);
+            return true;
         }
-    }
 
-    // Function disables wall of your choosing, pass it the script attached to the desired cell
-    // and an 'ID', where the ID = the wall. 1 = left, 2 = right, 3 = up, 4 = down.
-    public void RemoveWall(CellScript cScript, int wallID)
-    {
-        if (wallID == 1) cScript.wallL.SetActive(false);
-        else if (wallID == 2) cScript.wallR.SetActive(false);
-        else if (wallID == 3) cScript.wallU.SetActive(false);
-        else if (wallID == 4) cScript.wallD.SetActive(false);
-    }
-
-    public void CreateCentre()
-    {
-        // Get the 4 centre cells using the rows and columns variables.
-        // Remove the required walls for each.
-        centreCells[0] = allCells[new Vector2((mazeColumns / 2), (mazeRows / 2) + 1)];
-        RemoveWall(centreCells[0].cScript, 4);
-        RemoveWall(centreCells[0].cScript, 2);
-        centreCells[1] = allCells[new Vector2((mazeColumns / 2) + 1, (mazeRows / 2) + 1)];
-        RemoveWall(centreCells[1].cScript, 4);
-        RemoveWall(centreCells[1].cScript, 1);
-        centreCells[2] = allCells[new Vector2((mazeColumns / 2), (mazeRows / 2))];
-        RemoveWall(centreCells[2].cScript, 3);
-        RemoveWall(centreCells[2].cScript, 2);
-        centreCells[3] = allCells[new Vector2((mazeColumns / 2) + 1, (mazeRows / 2))];
-        RemoveWall(centreCells[3].cScript, 3);
-        RemoveWall(centreCells[3].cScript, 1);
-
-        // Create a List of ints, using this, select one at random and remove it.
-        // We then use the remaining 3 ints to remove 3 of the centre cells from the 'unvisited' list.
-        // This ensures that one of the centre cells will connect to the maze but the other three won't.
-        // This way, the centre room will only have 1 entry / exit point.
-        List<int> rndList = new List<int> { 0, 1, 2, 3 };
-        int startCell = rndList[Random.Range(0, rndList.Count)];
-        rndList.Remove(startCell);
-        currentCell = centreCells[startCell];
-        foreach(int c in rndList)
+        // check down.
+        if (row < Rows - 1 && grid[row + 1, column].Visited)
         {
-            unvisited.Remove(centreCells[c]);
+            return true;
         }
+
+        // check left.
+        if (column > 0 && grid[row, column - 1].Visited)
+        {
+            return true;
+        }
+
+        // check right.
+        if (column < Columns - 1 && grid[row, column + 1].Visited)
+        {
+            return true;
+        }
+
+        return false;
     }
 
-    public void GenerateCell(Vector2 pos, Vector2 keyPos)
+    // do a boundary check and unvisited check.
+    bool IsCellUnvisitedAndWithinBoundaries(int row, int column)
     {
-        // Create new Cell object.
-        Cell newCell = new Cell();
+        if (row >= 0 && row < Rows && column >= 0 && column < Columns
+            && !grid[row, column].Visited)
+        {
+            return true;
+        }
 
-        // Store reference to position in grid.
-        newCell.gridPos = keyPos;
-        // Set and instantiate cell GameObject.
-        newCell.cellObject = Instantiate(cellPrefab, pos, cellPrefab.transform.rotation);
-        // Child new cell to parent.
-        if (mazeParent != null) newCell.cellObject.transform.parent = mazeParent.transform;
-        // Set name of cellObject.
-        newCell.cellObject.name = "Cell - X:" + keyPos.x + " Y:" + keyPos.y;
-        // Get reference to attached CellScript.
-        newCell.cScript = newCell.cellObject.GetComponent<CellScript>();
-       
-        // Add to Lists.
-        allCells[keyPos] = newCell;
-        unvisited.Add(newCell);
+        return false;
     }
 
-    public void DeleteMaze()
-    {
-        if (mazeParent != null) Destroy(mazeParent);
-    }
-
-    public void InitValues()
-    {
-        // Check generation values to prevent generation failing.
-        if (IsOdd(mazeRows)) mazeRows--;
-        if (IsOdd(mazeColumns)) mazeColumns--;
-
-        if (mazeRows <= 3) mazeRows = 4;
-        if (mazeColumns <= 3) mazeColumns = 4;
-
-        // Determine size of cell using localScale.
-        cellSize = cellPrefab.transform.localScale.x;
-
-        // Create an empty parent object to hold the maze in the scene.
-        mazeParent = new GameObject();
-        mazeParent.transform.position = Vector2.zero;
-        mazeParent.name = "Maze";
-    }
-
-    public bool IsOdd(int value)
-    {
-        return value % 2 != 0;
-    }
-
-    public class Cell
-    {
-        public Vector2 gridPos;
-        public GameObject cellObject;
-        public CellScript cScript;
-    }
+}
+public class MazeCell {
+    public bool Visited = false;
+    public GameObject UpWall;
+    public GameObject DownWall;
+    public GameObject LeftWall;
+    public GameObject RightWall;
 }

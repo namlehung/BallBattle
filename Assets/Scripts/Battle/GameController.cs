@@ -25,7 +25,6 @@ public class GameController : MonoBehaviour
 
     private int currnetMatch;
     private int[] arrResultMatch;
-    private bool[] arrIsPlayerAttack = {true,false,true,false,true};
 
     private Rect playerZone = Rect.zero;
     private Rect enemyZone = Rect.zero;
@@ -83,6 +82,7 @@ public class GameController : MonoBehaviour
             Destroy(gameObject);
         }
         DontDestroyOnLoad(gameObject);
+        CaculatePlayZone(transform.localScale.x,transform.position);
     }
     // Start is called before the first frame update
     void Start()
@@ -116,8 +116,6 @@ public class GameController : MonoBehaviour
 
         gameState = STATE_GAME_PLAY;
         preGameState = STATE_GAME_NONE;
-        CaculatePlayZone(transform.localScale.x,transform.position);
-
     }
 
     private void switchGameState (int nextState)
@@ -303,7 +301,7 @@ public class GameController : MonoBehaviour
 
     public bool isCurrentPlayerAttack()
     {
-        return arrIsPlayerAttack[currnetMatch];
+        return (currnetMatch%2==0);
     }
     public float GetPlayerEnergyToSpawn(bool isAttack)
     {
@@ -318,7 +316,7 @@ public class GameController : MonoBehaviour
     }
     public float GetEnemyEnergyToSpawn()
     {
-        if(!arrIsPlayerAttack[currnetMatch])
+        if(isCurrentPlayerAttack() == false)
         {
             return AttackerPlayerPrefab.GetComponent<AttackerPlayer>().energyCost;
         }
@@ -372,13 +370,24 @@ public class GameController : MonoBehaviour
 
     private void StartPenaltyGame()
     {
+        switchGameState(STATE_GAME_PENALTY);
+        isNeedGenerateBall = true;
+        transform.GetComponent<MazeGenerator>().GenerateGrid();
+        goEndGame.SetActive(false);
+        PauseGame(false);
+        Vector3 pos = transform.GetComponent<MazeGenerator>().GetPlayerPenaltyPos();
+        transform.GetComponent<GamePlay>().GeneratePenaltyPlayer(pos);
+    }
 
+    public bool IsPenaltyGame()
+    {
+        return (gameState == STATE_GAME_PENALTY);
     }
     private void SetPlayerTitle()
     {
-        if(currnetMatch >= 0 && currnetMatch <= arrIsPlayerAttack.Length)
+        if(currnetMatch >= 0 && currnetMatch <= arrResultMatch.Length)
         {
-            if(arrIsPlayerAttack[currnetMatch])
+            if(isCurrentPlayerAttack())
             {
                 txtEnemyTitle.text = "ENEMY (DEFENDER)";
                 txtPlayerTitle.text = "PLAYER (ATTAKER)";
@@ -496,6 +505,10 @@ public class GameController : MonoBehaviour
                 }
             }
             break;
+            case STATE_GAME_PENALTY:
+            {
+            }
+            break;
             default:
             if(goTextWaitingAR.activeSelf)
             {
@@ -515,8 +528,11 @@ public class GameController : MonoBehaviour
             arrResultMatch[currnetMatch] = MATCH_DRAW;
             switchGameState(STATE_RESULT_MATCH);
             //gameBall.SetActive(false);
-            gameBall.transform.parent = null;
-            Destroy(gameBall);
+            if(gameBall)
+            {
+                gameBall.transform.parent = null;
+                Destroy(gameBall);
+            }
         }
     }
 
@@ -538,17 +554,19 @@ public class GameController : MonoBehaviour
             posSpawn.z = Random.Range(zone.y,zone.y + zone.height);//  + transform.position.z;
             posSpawn.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*transform.localScale.y);
             Debug.Log("pospawn: " + posSpawn + " battle pos: " + transform.position + " landposy : " + GetLandPosY() + " scaley: " + transform.localScale.y + " radius: " + gameBall.GetComponent<SphereCollider>().radius);
-            //posSpawn.x += transform.position.x;
-            //posSpawn.z += transform.position.z;
-            Debug.Log("zone : " + zone + " posSwan: " + posSpawn);
+            Debug.Log("zone : " + zone);
 
+            if(IsPenaltyGame())
+            {
+                Vector3 temppos = transform.GetComponent<MazeGenerator>().GeneratePosBall();
+                posSpawn.x = temppos.x;
+                posSpawn.z = temppos.z; 
+            }
             gameBall.transform.position = posSpawn;
             gameBall.transform.localScale = Vector3.one;
-            //gameBall.transform.parent = transform;
+            
             Debug.Log("Generate ball pos:" + gameBall.transform.position);
-            //Vector3 localscale = gameBall.transform.localScale;
-            //gameBall.transform.localScale = new Vector3(localscale.x*transform.localScale.x,localscale.y*transform.localScale.y,localscale.z*transform.localScale.z);
-            //gameBall.SetActive(true);
+            
             gameBall.tag = "battle_ball";
         }
     }

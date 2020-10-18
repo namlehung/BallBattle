@@ -13,11 +13,14 @@ public class AttackerPlayer : MonoBehaviour
     private PlayerController playerController;
 
     private GameObject goIndicator;
+    private ParticleSystem effectHasBall;
     // Start is called before the first frame update
     void Start()
     {
         playerController = transform.GetComponent<PlayerController>();
         goIndicator = GameController.gameControllerInstance.FindChildByName(transform,"PlayerIndicator");
+        GameObject playereffect = GameController.gameControllerInstance.FindChildByName(transform,"Effects");
+        effectHasBall = GameController.gameControllerInstance.FindChildByName(playereffect.transform,"HasBall").GetComponent<ParticleSystem>();
     }
 
     // Update is called once per frame
@@ -58,18 +61,18 @@ public class AttackerPlayer : MonoBehaviour
                 }
                 if(playerController.HasCarryBall)
                 {
-                    if(playerController.effectHasBall.gameObject.activeSelf == false)
+                    if(effectHasBall.gameObject.activeSelf == false)
                     {
-                        playerController.effectHasBall.gameObject.SetActive(true);
-                        playerController.effectHasBall.Play();
+                        effectHasBall.gameObject.SetActive(true);
+                        effectHasBall.Play();
                     }
                 }
                 else
                 {
-                    if(playerController.effectHasBall.gameObject.activeSelf)
+                    if(effectHasBall.gameObject.activeSelf)
                     {
-                        playerController.effectHasBall.Pause();
-                        playerController.effectHasBall.gameObject.SetActive(false);
+                       effectHasBall.Pause();
+                       effectHasBall.gameObject.SetActive(false);
                     }
                 }
             }
@@ -80,10 +83,10 @@ public class AttackerPlayer : MonoBehaviour
                 {
                     playerController.IsInitEachState = true;
                     playerController.SetInActiveMaterial();
-                    if(playerController.effectHasBall.gameObject.activeSelf)
+                    if(effectHasBall.gameObject.activeSelf)
                     {
-                        playerController.effectHasBall.Pause();
-                        playerController.effectHasBall.gameObject.SetActive(false);
+                       effectHasBall.Pause();
+                       effectHasBall.gameObject.SetActive(false);
                     }
                     StartCoroutine(WaitFromIdletoActive());
                 }
@@ -140,7 +143,10 @@ public class AttackerPlayer : MonoBehaviour
             else
             {
                 Debug.Log("Player hit the Fence");
-                HitTheFence();
+                if(GameController.gameControllerInstance.IsPenaltyGame() == false)
+                {
+                    HitTheFence();
+                }
             }
         }
         else if(other.gameObject.CompareTag("battle_ball"))

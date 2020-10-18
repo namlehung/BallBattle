@@ -48,22 +48,25 @@ public class GamePlay : MonoBehaviour
 
         if((GameController.gameControllerInstance.isPlayInARMode == false && HasPointerDown(out pointerDown)) || (GameController.gameControllerInstance.isPlayInARMode && GameController.gameControllerInstance.hasARpointerDown))
         {
-            GameController.gameControllerInstance.hasARpointerDown = false;
-            Rect Azone = GameController.gameControllerInstance.GetAttackerZone();
-            if(pointerDown.x > Azone.x && pointerDown.x < Azone.x + Azone.width)
+            if(GameController.gameControllerInstance.IsPenaltyGame() == false)
             {
-                if(pointerDown.z > Azone.y && pointerDown.z < Azone.y + Azone.height)
+                GameController.gameControllerInstance.hasARpointerDown = false;
+                Rect Azone = GameController.gameControllerInstance.GetAttackerZone();
+                if(pointerDown.x > Azone.x && pointerDown.x < Azone.x + Azone.width)
                 {
-                    GenerateAttacker(pointerDown);
-                }            
-            }
-            Rect Dzone = GameController.gameControllerInstance.GetDefenderZone();
-            if(pointerDown.x > Dzone.x && pointerDown.x < Dzone.x + Dzone.width)
-            {
-                if(pointerDown.z > Dzone.y && pointerDown.z < Dzone.y + Dzone.height)
+                    if(pointerDown.z > Azone.y && pointerDown.z < Azone.y + Azone.height)
+                    {
+                        GenerateAttacker(pointerDown);
+                    }            
+                }
+                Rect Dzone = GameController.gameControllerInstance.GetDefenderZone();
+                if(pointerDown.x > Dzone.x && pointerDown.x < Dzone.x + Dzone.width)
                 {
-                    GenerateDefender(pointerDown);
-                }            
+                    if(pointerDown.z > Dzone.y && pointerDown.z < Dzone.y + Dzone.height)
+                    {
+                        GenerateDefender(pointerDown);
+                    }            
+                }
             }
         }
         
@@ -211,6 +214,31 @@ public class GamePlay : MonoBehaviour
         GameObject nee = Instantiate(NotEnoughEnergyPrefab);
         nee.transform.position = new Vector3(pos.x,pos.y+0.1f,pos.z);
         nee.transform.localScale = Vector3.one*GameController.gameControllerInstance.transform.localScale.x;
+    }
+    public void GeneratePenaltyPlayer(Vector3 pos)
+    {
+        pos.y = GameController.gameControllerInstance.GetLandPosY();
+        int i = 0;
+        bool isPlayerAttack = true;
+        bool isEnemy = !isPlayerAttack;
+        GameObject go;
+        for(;i<arrAttackerPlayer.Count;i++)
+        {
+            go = arrAttackerPlayer[i];
+            if(go.activeSelf == false)
+            {
+                //go.transform.parent = null;
+                //go.transform.parent = transform;
+                go.SetActive(true);
+                go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
+                return;
+            }
+        }
+        go = Instantiate(GameController.gameControllerInstance.AttackerPlayerPrefab);
+        go.transform.parent = transform;
+        go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
+        
+        arrAttackerPlayer.Add(go);
     }
     private void GenerateAttacker(Vector3 pos)
     {
