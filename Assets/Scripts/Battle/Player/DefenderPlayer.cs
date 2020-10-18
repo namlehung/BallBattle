@@ -50,6 +50,7 @@ public class DefenderPlayer : MonoBehaviour
                     targetPlayer = null;
                     goRangeDefender.SetActive(false);
                     playerController.IsInitEachState = true;
+                    playerController.effectSpawn.Play();
                     StartCoroutine(WaitFromSpawntoActive());
                 }
             }

@@ -30,6 +30,7 @@ public class AttackerPlayer : MonoBehaviour
                 if(playerController.IsInitEachState == false)
                 {
                     playerController.IsInitEachState = true;
+                    playerController.effectSpawn.Play();
                     StartCoroutine(WaitFromSpawntoActive());
                 }
             }
@@ -55,6 +56,22 @@ public class AttackerPlayer : MonoBehaviour
                         goIndicator.SetActive(false);
                     }
                 }
+                if(playerController.HasCarryBall)
+                {
+                    if(playerController.effectHasBall.gameObject.activeSelf == false)
+                    {
+                        playerController.effectHasBall.gameObject.SetActive(true);
+                        playerController.effectHasBall.Play();
+                    }
+                }
+                else
+                {
+                    if(playerController.effectHasBall.gameObject.activeSelf)
+                    {
+                        playerController.effectHasBall.Pause();
+                        playerController.effectHasBall.gameObject.SetActive(false);
+                    }
+                }
             }
             break;
             case PlayerController.PLAYER_STATE_INACTIVE:
@@ -63,6 +80,11 @@ public class AttackerPlayer : MonoBehaviour
                 {
                     playerController.IsInitEachState = true;
                     playerController.SetInActiveMaterial();
+                    if(playerController.effectHasBall.gameObject.activeSelf)
+                    {
+                        playerController.effectHasBall.Pause();
+                        playerController.effectHasBall.gameObject.SetActive(false);
+                    }
                     StartCoroutine(WaitFromIdletoActive());
                 }
             }

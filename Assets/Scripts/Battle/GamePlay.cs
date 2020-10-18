@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class GamePlay : MonoBehaviour
 {
+    public GameObject NotEnoughEnergyPrefab;
     private EnergyController playerEnergy;
     private EnergyController enemyEnergy;
     private List<GameObject> arrAttackerPlayer;
@@ -204,6 +205,13 @@ public class GamePlay : MonoBehaviour
         playerhasball = null;
         return ATTACKER_STATUS_NONE;
     }
+
+    private void ShowNotEnoughEnergy(Vector3 pos)
+    {
+        GameObject nee = Instantiate(NotEnoughEnergyPrefab);
+        nee.transform.position = new Vector3(pos.x,pos.y+0.1f,pos.z);
+        nee.transform.localScale = Vector3.one*GameController.gameControllerInstance.transform.localScale.x;
+    }
     private void GenerateAttacker(Vector3 pos)
     {
         pos.y = GameController.gameControllerInstance.GetLandPosY();
@@ -235,6 +243,10 @@ public class GamePlay : MonoBehaviour
             go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
             
             arrAttackerPlayer.Add(go);
+        }
+        else
+        {
+            ShowNotEnoughEnergy(pos);
         }
     }
 
@@ -268,6 +280,10 @@ public class GamePlay : MonoBehaviour
             go.transform.parent = transform;
             go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
             arrDefenderPlayer.Add(go);
+        }
+        else
+        {
+            ShowNotEnoughEnergy(pos);
         }
     }
     private bool HasPointerDown(out Vector3 pointdown)

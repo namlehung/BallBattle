@@ -21,13 +21,17 @@ public class PlayerController : MonoBehaviour
      [HideInInspector] public Vector3 initPos;
      [HideInInspector] public Vector3 initRotateAngle;
      [HideInInspector] public Animator animator;
-
+    [HideInInspector] public ParticleSystem effectSpawn;
+    [HideInInspector] public ParticleSystem effectHasBall;
     private bool hasCarryBall;
     private bool isGoToGetBall;
     // Start is called before the first frame update
     void Start()
     {
         animator = GameController.gameControllerInstance.FindChildByName(transform,"playermodel").GetComponent<Animator>();
+        GameObject playereffect = GameController.gameControllerInstance.FindChildByName(transform,"Effects");
+        effectSpawn = GameController.gameControllerInstance.FindChildByName(playereffect.transform,"Spawn").GetComponent<ParticleSystem>();
+        effectHasBall = GameController.gameControllerInstance.FindChildByName(playereffect.transform,"HasBall").GetComponent<ParticleSystem>();
     }
 
     public void InitPlayer(Vector3 pos,bool IsEnemy)

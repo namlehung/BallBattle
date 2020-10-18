@@ -1233,7 +1233,6 @@ MonoBehaviour:
   EnemyGoalPos: {fileID: 4669420618727710613}
   PlayerGoalPos: {fileID: 4669420620010868142}
   isCheatdraw: 1
-  isPauseGameAtStart: 0
   isPlayInARMode: 0
   hasARpointerDown: 0
 --- !u!114 &4669420618793761040
@@ -1260,6 +1259,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52e88ba35d916744fb57f691b8ecbe1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NotEnoughEnergyPrefab: {fileID: 3536634081273999832, guid: f230fa3e7620f5d41b2a6f1f18df3e7a,
+    type: 3}
 --- !u!114 &4669420618793761042
 MonoBehaviour:
   m_ObjectHideFlags: 0
