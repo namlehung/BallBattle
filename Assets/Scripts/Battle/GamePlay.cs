@@ -140,8 +140,8 @@ public class GamePlay : MonoBehaviour
            // Debug.Log("defender nearest index: " + index);
             DefenderPlayer defender = arrDefenderPlayer[index].GetComponent<DefenderPlayer>();
             float range = defender.rangeDefender/2 + (0.2f * GameController.gameControllerInstance.transform.localScale.x);//player size box
-            Debug.Log("namlh debug range : " + range);
-            Debug.Log("namlh deubg range 2: " + (0.2f * GameController.gameControllerInstance.transform.localScale.x));
+            //Debug.Log("namlh debug range : " + range);
+            //Debug.Log("namlh deubg range 2: " + (0.2f * GameController.gameControllerInstance.transform.localScale.x));
 			float distoplayer = Vector3.Distance(arrDefenderPlayer[index].transform.position,playerhasball.transform.position);
             if(distoplayer < range)
             {
@@ -221,9 +221,11 @@ public class GamePlay : MonoBehaviour
 
     private void ShowNotEnoughEnergy(Vector3 pos)
     {
+    #if !PLATFORM_ANDROID
         GameObject nee = Instantiate(NotEnoughEnergyPrefab);
         nee.transform.position = new Vector3(pos.x,pos.y+0.1f,pos.z);
         nee.transform.localScale = Vector3.one*GameController.gameControllerInstance.transform.localScale.x;
+    #endif//
     }
     public void GeneratePenaltyPlayer(Vector3 pos)
     {

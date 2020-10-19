@@ -104,10 +104,7 @@ public class MazeGenerator : MonoBehaviour
     public void GenerateGrid()
     {
         // destroy all the children of this goTheMaze object.
-        foreach (Transform transform in goTheMaze.transform)
-        {
-            Destroy(transform.gameObject);
-        }
+        ClearGrib();
 
         // first, we create the grid with all the walls and floors.
         CreateGrid();
@@ -126,6 +123,15 @@ public class MazeGenerator : MonoBehaviour
         RemoveWalls();
     }
 
+    public void ClearGrib()
+    {
+        foreach (Transform transform in goTheMaze.transform)
+        {
+            Destroy(transform.gameObject);
+        }
+        goTheMaze.transform.parent = transform;
+        goTheMaze.transform.localScale = Vector3.one;
+    }
     void RemoveWalls()//the wall has same postion with the wall of the yard
     {
        foreach(Transform childtf in goTheMaze.transform)
@@ -203,6 +209,7 @@ public class MazeGenerator : MonoBehaviour
                 goCell.name = "Cell_r"+i+"_c"+j;
                 goCell.transform.position = new Vector3(cellPosX,cellPosY,cellPosZ);
                 goCell.transform.parent = goTheMaze.transform;
+                goCell.transform.localScale = Vector3.one;
                 
 
                 GameObject upWall = Instantiate(Wall);
@@ -215,6 +222,7 @@ public class MazeGenerator : MonoBehaviour
                 upWall.transform.localScale = localsale;
                 upWall.transform.localPosition = new Vector3(0,0,size/2);
                 upWall.transform.rotation = Quaternion.identity;
+                //upWall.transform.localScale = Vector3.one*0.7f;
                
                 GameObject downWall = Instantiate(Wall);
                 downWall.name = "DownWall";
@@ -222,6 +230,7 @@ public class MazeGenerator : MonoBehaviour
                 downWall.transform.localScale = localsale;
                 downWall.transform.localPosition = new Vector3(0,0,-size/2);
                 downWall.transform.rotation = Quaternion.identity;
+                //downWall.transform.localScale = Vector3.one*0.7f;
 
                 GameObject leftWall = Instantiate(Wall);
                 leftWall.name = "LeftWall";
@@ -229,6 +238,7 @@ public class MazeGenerator : MonoBehaviour
                 leftWall.transform.localScale = localsale;
                 leftWall.transform.localPosition = new Vector3(-size/2,0,0);
                 leftWall.transform.rotation = Quaternion.Euler(0, 90, 0);
+                //leftWall.transform.localScale = Vector3.one*0.7f;
 
                 GameObject rightWall = Instantiate(Wall);
                 rightWall.name = "RightWall";
@@ -236,6 +246,7 @@ public class MazeGenerator : MonoBehaviour
                 rightWall.transform.localScale = localsale;
                 rightWall.transform.localPosition = new Vector3(size/2,0,0);
                 rightWall.transform.rotation = Quaternion.Euler(0, 90, 0);
+                //rightWall.transform.localScale = Vector3.one*0.7f;
 
                 // create the maze cell and add references to its walls.
                 grid[i, j] = new MazeCell();

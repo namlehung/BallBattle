@@ -41,7 +41,7 @@ public class PlayerController : MonoBehaviour
        
         isEnemy = IsEnemy;
         switchState(PLAYER_STATE_SPAWN);
-        Debug.Log("Generate/Active is enemy: " + isEnemy + " pos: " + pos );
+        //Debug.Log("Generate/Active is enemy: " + isEnemy + " pos: " + pos );
         if(isEnemy)
         {
             SetPlayerMaterial(GameController.gameControllerInstance.RedEnemyMaterial);

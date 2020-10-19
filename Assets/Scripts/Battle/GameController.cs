@@ -91,7 +91,7 @@ public class GameController : MonoBehaviour
         {
             isFirstLaunch = false;
         }
-        Debug.Log("start Game Controller");
+        //Debug.Log("start Game Controller");
         timeRemain = GameObject.Find("Battle/Canvas/Game_UI/Time/Timeremain").GetComponentInChildren<TextMeshProUGUI>();
         goGamePause = GameObject.Find("Battle/Canvas/Game_UI/GamePause");
         txtEnemyTitle = GameObject.Find("Battle/Canvas/Game_UI/EnemyInfo/Name/txt").GetComponent<TextMeshProUGUI>();
@@ -183,7 +183,7 @@ public class GameController : MonoBehaviour
         }
         transform.localScale = scale*scaleGameInARMode;
         transform.position = new Vector3(pos.x,pos.y +0.01f,pos.z);
-        Debug.Log("namlh battle pos: " + pos);
+        //Debug.Log("namlh battle pos: " + pos);
         CaculatePlayZone(transform.localScale.x,transform.position);
     }
 
@@ -202,9 +202,9 @@ public class GameController : MonoBehaviour
         playerZone = new Rect(recx,recz,width,height);
         recz = 0 +playersizebox.z + deltaPos.z;
         enemyZone = new Rect(recx,recz,width,height);
-        Debug.Log("size field: " + sizeLandField);
-        Debug.Log("player Zone: " + playerZone);
-        Debug.Log("Enemy Zoen: " + enemyZone);
+        //Debug.Log("size field: " + sizeLandField);
+        //Debug.Log("player Zone: " + playerZone);
+        //Debug.Log("Enemy Zoen: " + enemyZone);
     }
 
     public void ResetBattleLocation()
@@ -225,11 +225,12 @@ public class GameController : MonoBehaviour
         //pos.x = (pos.x - transform.position.x)/scaleGameInARMode;
         //pos.y = (pos.y -transform.position.y)/scaleGameInARMode;
         //pos.z = (pos.z - transform.position.z)/scaleGameInARMode;
-        Debug.Log("namlh point on Game: " + pos);
+        //Debug.Log("namlh point on Game: " + pos);
         transform.GetComponent<GamePlay>().SetPointerDown(pos);
     }
     public Vector2 GetLandSize()
     {
+        //CaculatePlayZone(transform.localScale.x,transform.position);
         return sizeLandField;
     }
     public bool GetBallPosition(out Vector3 pos)
@@ -273,9 +274,10 @@ public class GameController : MonoBehaviour
             //gameBall.SetActive(true);
             gameBall = Instantiate(GameBallPrefab);
             gameBall.transform.parent = transform;
-            position.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*gameBall.transform.localScale.y);
+            position.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*transform.localScale.y);
             gameBall.transform.position = position;
             gameBall.transform.localScale = Vector3.one;
+            Debug.Log("namlh debug pass ball pos:" + gameBall.transform.position + " player pos: " + playerReceiveBallPos);
             BallController ballController = gameBall.GetComponent<BallController>();
             ballController.setTargetPos(playerReceiveBallPos);
         }
@@ -364,6 +366,8 @@ public class GameController : MonoBehaviour
             StartPenaltyGame();
             return;
         }
+        isNeedGenerateBall = true;
+        //transform.GetComponent<MazeGenerator>().ClearGrib();
         finalresultGame = -1;
         currnetMatch = -1;
         arrResultMatch = new int[NUMBER_MATCH];
@@ -570,11 +574,12 @@ public class GameController : MonoBehaviour
                 gameBall.transform.parent = transform;
             }
             Vector3 posSpawn = Vector3.zero;
-            posSpawn.x = Random.Range(zone.x,zone.x + zone.width);// + transform.position.x;
-            posSpawn.z = Random.Range(zone.y,zone.y + zone.height);//  + transform.position.z;
+            float delta = 0.2f*transform.localScale.y;//player size for incase the ball it to near the wall
+            posSpawn.x = Random.Range(zone.x + delta,zone.x + zone.width - delta );// + transform.position.x;
+            posSpawn.z = Random.Range(zone.y + delta,zone.y + zone.height - delta);//  + transform.position.z;
             posSpawn.y = GetLandPosY() + (gameBall.GetComponent<SphereCollider>().radius*transform.localScale.y);
-            Debug.Log("pospawn: " + posSpawn + " battle pos: " + transform.position + " landposy : " + GetLandPosY() + " scaley: " + transform.localScale.y + " radius: " + gameBall.GetComponent<SphereCollider>().radius);
-            Debug.Log("zone : " + zone);
+            //Debug.Log("pospawn: " + posSpawn + " battle pos: " + transform.position + " landposy : " + GetLandPosY() + " scaley: " + transform.localScale.y + " radius: " + gameBall.GetComponent<SphereCollider>().radius);
+            //Debug.Log("zone : " + zone);
 
             if(IsPenaltyGame())
             {
@@ -585,7 +590,7 @@ public class GameController : MonoBehaviour
             gameBall.transform.position = posSpawn;
             gameBall.transform.localScale = Vector3.one;
             
-            Debug.Log("Generate ball pos:" + gameBall.transform.position);
+            Debug.Log("namlh debug Generate ball pos:" + gameBall.transform.position);
             
             gameBall.tag = "battle_ball";
         }
@@ -616,18 +621,35 @@ public class GameController : MonoBehaviour
 
     public void PenaltyFailed()
     {
-        arrResultMatch[currnetMatch] = MATCH_LOSE;
+        for(int i = 0;i<arrResultMatch.Length;i++)
+        {
+            arrResultMatch[i] = MATCH_LOSE;
+        }
+        if(gameBall)
+        {
+            Destroy(gameBall);
+        }
         switchGameState(STATE_RESULT_MATCH);
     }
     public void AttackerScoreGoal()
     {
-        if(isCurrentPlayerAttack())
+        if(IsPenaltyGame())
         {
-            arrResultMatch[currnetMatch] = MATCH_WIN;
+            for(int i = 0;i<arrResultMatch.Length;i++)
+            {
+                arrResultMatch[i] = MATCH_WIN;
+            }
         }
         else
         {
-            arrResultMatch[currnetMatch] = MATCH_LOSE;
+            if(isCurrentPlayerAttack())
+            {
+                arrResultMatch[currnetMatch] = MATCH_WIN;
+            }
+            else
+            {
+                arrResultMatch[currnetMatch] = MATCH_LOSE;
+            }
         }
         switchGameState(STATE_RESULT_MATCH);
     }
