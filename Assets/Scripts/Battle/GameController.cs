@@ -301,6 +301,10 @@ public class GameController : MonoBehaviour
 
     public bool isCurrentPlayerAttack()
     {
+        if(IsPenaltyGame())
+        {
+            return true;
+        }
         return (currnetMatch%2==0);
     }
     public float GetPlayerEnergyToSpawn(bool isAttack)
@@ -377,6 +381,14 @@ public class GameController : MonoBehaviour
         PauseGame(false);
         Vector3 pos = transform.GetComponent<MazeGenerator>().GetPlayerPenaltyPos();
         transform.GetComponent<GamePlay>().GeneratePenaltyPlayer(pos);
+        if(transform.GetComponent<GamePenalty>().isManualMove)
+        {
+            timeLimit = GameTimePerMatch/3;
+        }
+        else
+        {
+            timeLimit = GameTimePerMatch;
+        }
     }
 
     public bool IsPenaltyGame()
@@ -525,7 +537,15 @@ public class GameController : MonoBehaviour
         GenerateBall();
         if(timeLimit<0)
         {
-            arrResultMatch[currnetMatch] = MATCH_DRAW;
+            PauseGame(true);
+            if(IsPenaltyGame())
+            {
+                arrResultMatch[currnetMatch] = MATCH_LOSE;
+            }
+            else
+            {
+                arrResultMatch[currnetMatch] = MATCH_DRAW;
+            }
             switchGameState(STATE_RESULT_MATCH);
             //gameBall.SetActive(false);
             if(gameBall)
@@ -594,6 +614,11 @@ public class GameController : MonoBehaviour
        }
    }
 
+    public void PenaltyFailed()
+    {
+        arrResultMatch[currnetMatch] = MATCH_LOSE;
+        switchGameState(STATE_RESULT_MATCH);
+    }
     public void AttackerScoreGoal()
     {
         if(isCurrentPlayerAttack())

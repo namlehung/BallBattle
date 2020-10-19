@@ -23,7 +23,7 @@ public class MazeGenerator : MonoBehaviour
         //GenerateGrid();
 	}
 
-    public Vector3 GetPlayerPenaltyPos()
+    public Vector3 GetPosAt(int irow, int icolume)
     {
         Vector2 yardsize = GameController.gameControllerInstance.GetLandSize();
         float size = yardsize.x / Columns;
@@ -37,27 +37,69 @@ public class MazeGenerator : MonoBehaviour
         {
             startZ -= size/2;
         }
-        int i = Columns/2;
-        int j = Rows-1;
-        return new Vector3(startX + i*size,0,startZ - j*size);
+        return new Vector3(startX + icolume*size,0,startZ - irow*size);
+    }
+    public int GetIndex(int irow, int icolume)
+    {
+         if(icolume < 0 || icolume >= Columns)
+        {
+            return -1;
+        }
+        if(irow < 0 || irow >= Rows)
+        {
+            return -1;
+        }
+        return irow + icolume*Columns;
+    }
+    public CellInfo GetCellInfo(int irow, int icolume)
+    {
+        if(GetIndex(irow,icolume) == -1)
+        {
+            return null;
+        }
+        CellInfo cellInfo = new CellInfo();
+        cellInfo.icol = icolume;
+        cellInfo.irow = irow;
+
+        if(grid[irow,icolume].DownWall == null)
+        {
+            if(irow != Rows-1)
+            {
+                cellInfo.down = true;
+            }
+        }
+        if(grid[irow,icolume].UpWall == null)
+        {
+            if(irow != 0)
+            {
+                cellInfo.up = true;
+            }
+        }
+         if(grid[irow,icolume].LeftWall == null)
+        {
+            if(icolume != 0)
+            {
+                cellInfo.left = true;
+            }
+        }
+         if(grid[irow,icolume].RightWall == null)
+        {
+            if(icolume != Columns-1)
+            {
+                cellInfo.down = true;
+            }
+        }
+        return cellInfo;
+    }
+    public Vector3 GetPlayerPenaltyPos()
+    {
+        return GetPosAt(Rows-1,Columns/2);
     }
     public Vector3 GeneratePosBall()
     {
-        Vector2 yardsize = GameController.gameControllerInstance.GetLandSize();
-        float size = yardsize.x / Columns;
-        float startX = -(Columns/2)*size;
-        float startZ = (Rows/2)*size ;
-        if(Columns%2 == 0)
-        {
-            startX += size/2;
-        }
-        if(Rows%2 == 0)
-        {
-            startZ -= size/2;
-        }
-        int i = Random.Range(0,100)%Columns;
-        int j = Random.Range(0,100)%Rows;
-        return new Vector3(startX + i*size,0,startZ - j*size);
+        int i = Random.Range(0,100)%Rows;
+        int j = Random.Range(0,100)%Columns;
+        return GetPosAt(i,j);
     }
     public void GenerateGrid()
     {

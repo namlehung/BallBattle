@@ -124,6 +124,13 @@ public class AttackerPlayer : MonoBehaviour
             {
                 transform.position = transform.position + playerController.movePos*Time.fixedDeltaTime*normalSpeed*gameScale;
             }
+            if(GameController.gameControllerInstance.IsPenaltyGame())
+            {
+                if(Vector3.Distance(transform.position,playerController.targetPos) < 0.05f)
+                {
+                    playerController.IsMoving = false;
+                }
+            }
         }
     }
 
@@ -142,10 +149,22 @@ public class AttackerPlayer : MonoBehaviour
             }
             else
             {
-                Debug.Log("Player hit the Fence");
                 if(GameController.gameControllerInstance.IsPenaltyGame() == false)
                 {
+                    Debug.Log("Player hit the Fence");
                     HitTheFence();
+                }
+                else
+                {
+                    if(other.gameObject.name.Equals("mid") && playerController.HasCarryBall == false)
+                    {
+                        Debug.Log("Player hit the Fence");
+                        GameController.gameControllerInstance.PenaltyFailed();
+                    }
+                    else
+                    {
+                        playerController.IsMoving = false;
+                    }
                 }
             }
         }

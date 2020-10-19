@@ -68,8 +68,16 @@ public class GamePlay : MonoBehaviour
                     }            
                 }
             }
+            else
+            {
+                transform.GetComponent<GamePenalty>().UpdateManualMove(pointerDown);
+            }
         }
-        
+        if(GameController.gameControllerInstance.IsPenaltyGame())
+        {
+            return;
+        }
+
         GameObject playerhasball = null;
         int status = GetAttackerStatus(out playerhasball);
         if(status == ATTACKER_STATUS_NONE)
@@ -132,8 +140,10 @@ public class GamePlay : MonoBehaviour
            // Debug.Log("defender nearest index: " + index);
             DefenderPlayer defender = arrDefenderPlayer[index].GetComponent<DefenderPlayer>();
             float range = defender.rangeDefender/2 + (0.2f * GameController.gameControllerInstance.transform.localScale.x);//player size box
+            Debug.Log("namlh debug range : " + range);
+            Debug.Log("namlh deubg range 2: " + (0.2f * GameController.gameControllerInstance.transform.localScale.x));
 			float distoplayer = Vector3.Distance(arrDefenderPlayer[index].transform.position,playerhasball.transform.position);
-            if(distoplayer + 0.1 < range)
+            if(distoplayer < range)
             {
                 if(defender.defenderStatus == DefenderPlayer.DEFENDER_NONE)
                 {
@@ -231,13 +241,18 @@ public class GamePlay : MonoBehaviour
                 //go.transform.parent = transform;
                 go.SetActive(true);
                 go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
+
+                transform.GetComponent<GamePenalty>().StartPenaltyGame(go);
+
                 return;
             }
         }
         go = Instantiate(GameController.gameControllerInstance.AttackerPlayerPrefab);
         go.transform.parent = transform;
         go.GetComponent<PlayerController>().InitPlayer(pos,isEnemy);
-        
+
+        transform.GetComponent<GamePenalty>().StartPenaltyGame(go);
+
         arrAttackerPlayer.Add(go);
     }
     private void GenerateAttacker(Vector3 pos)
